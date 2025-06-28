@@ -1,0 +1,141 @@
+/gym-management-system
+│
+├── frontend/                             # React Native App
+│   ├── App.js
+│   ├── package.json
+│   ├── babel.config.js
+│   ├── assets/                           # Fonts, icons, logos
+│   │   ├── fonts/
+│   │   └── images/
+│   │
+│   ├── components/                       # Reusable UI Components
+│   │   ├── Header.js
+│   │   ├── ProgressCard.js
+│   │   ├── WorkoutItem.js
+│   │   ├── Achievement.js
+│   │   ├── Calendar.js
+│   │   ├── Slider.js
+│   │   └── Carousel.js
+│   │
+│   ├── constants/
+│   │   ├── colors.js
+│   │   ├── strings.js
+│   │   └── roles.js
+│   │
+│   ├── contexts/                         # Auth and Role contexts
+│   │   ├── AuthContext.js
+│   │   └── RoleContext.js
+│   │
+│   ├── hooks/
+│   │   └── useFetch.js
+│   │
+│   ├── navigations/
+│   │   ├── MainNavigator.js
+│   │   ├── ClientStack.js
+│   │   ├── TrainerStack.js
+│   │   ├── AdminStack.js
+│   │   └── AuthNavigator.js
+│   │
+│   ├── screens/
+│   │   ├── shared/
+│   │   │   ├── DietPlanScreen.js
+│   │   │   ├── WorkoutPlanScreen.js
+│   │   │   ├── LoginScreen.js
+│   │   │   ├── AccountSettings.js
+│   │   │   ├── DietPlanScreen.js
+│   │   │   ├── TrainerInfoScreen.js
+│   │   │   ├── WorkoutManagement.js
+│   │   │   └── SplashScreen.js
+│   │   │
+│   │   ├── client/
+│   │   │   ├── ClientHomeScreen.js
+│   │   │   ├── ClientMenuScreen.js
+│   │   │   ├── ProgressReportScreen.js
+│   │   │   └── ClientAttendanceScreen.js
+│   │   │
+│   │   ├── trainer/
+│   │   │   ├── ClientListScreen.js
+│   │   │   ├── TrainerProgressTrackingScreen.js
+│   │   │   └── TrainerAttendanceOverview.js
+│   │   │
+│   │   └── admin/
+│   │       ├── OverviewScreen.js
+│   │       ├── StaffLogs.js
+│   │       ├── SalaryManagement.js
+│   │       ├── MarketingDashboard.js
+│   │       ├── AnalyticsScreen.js
+│   │       └── AppSettings.js
+│   │
+│   ├── services/
+│   │    ├── api.js                     # Axios base instance with interceptors
+│   │    ├── authService.js             # login, logout, signup, token refresh
+│   │    ├── userService.js             # fetch profile, update user, change role
+│   │    ├── workoutService.js          # create/update/delete workout plans
+│   │    ├── dietService.js             # manage diet plans
+│   │    ├── planService.js             # assign plans to clients, get assigned plans
+│   │    ├── progressService.js         # log or view progress reports
+│   │    ├── attendanceService.js       # mark, get, and analyze attendance
+│   │    ├── trainerService.js          # manage trainer-client mapping
+│   │    ├── salaryService.js           # get/set trainer salary (admin use)
+│   │    ├── logService.js              # fetch logs for admin
+│   │    ├── analyticsService.js        # app data for graphs
+│   │    ├── marketingService.js        # marketing data, campaign status
+│   │    ├── notificationService.js     # (optional) push/email/SMS notifications
+│   │    └── fileUploadService.js       # (optional) for uploading profile pics or documents
+│   │
+│   ├── store/
+│   │   ├── index.js
+│   │   ├── userSlice.js
+│   │   └── planSlice.js
+│   │
+│   └── utils/
+│       ├── helpers.js
+│       └── validators.js
+│
+├── backend/                              # Express + MySQL API
+│   ├── server.js
+│   ├── package.json
+│   ├── .env
+│   ├── config/
+│   │   ├── db.js                         # MySQL connection setup
+│   │   └── config.js
+│   │
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── userController.js
+│   │   ├── workoutController.js
+│   │   ├── progressController.js
+│   │   ├── attendanceController.js
+│   │   └── ...
+│   │
+│   ├── middleware/
+│   │   ├── authMiddleware.js
+│   │   ├── errorHandler.js
+│   │   └── roleCheck.js
+│   │
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Workout.js
+│   │   ├── Progress.js
+│   │   ├── Attendance.js
+│   │   ├── Salary.js
+│   │   └── ...
+│   │
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── userRoutes.js
+│   │   ├── workoutRoutes.js
+│   │   ├── adminRoutes.js
+│   │   └── ...
+│   │
+│   └── utils/
+│       ├── token.js
+│       └── logger.js
+│
+├── database/                             # XAMPP + SQL Scripts
+│   ├── schema.sql                        # Table creation script
+│   ├── seed.sql                          # Dummy data
+│   └── readme.txt                        # How to import in phpMyAdmin
+│
+├── README.md
+└── .gitignore

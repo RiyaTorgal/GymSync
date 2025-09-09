@@ -14,7 +14,24 @@ It helps gyms manage attendance, progress reports, and dashboards in one place.
 ```
 GYMSYNC/
 ├── frontend/                                       # directory to contain UI components and frameworks
-│   └── info.txt                                    # init file
+│   ├── .vscode/
+│   │ 
+│   ├── app/                                        # main application entry point and route handling.
+│   │ 
+│   ├── assets/                                     # directory to keep in-use images, fonts and other assets
+│   │  
+│   ├── components/                                 # directory for reusable components 
+│   │ 
+│   ├── constants/                                  # centralized configuration values, API endpoints, and static constants.
+│   │ 
+│   ├── hooks/                                      # custom React hooks for shared logic across components.
+│   │ 
+│   ├── scripts/                                    # utility scripts for automation, setup, or build tasks.
+│   │ 
+│   ├── eslint.config.js
+│   ├── tsconfig.json
+│   ├── package-lock.json                   
+│   └── package.json
 │
 ├── config/
 │   ├── file_structure.txt                          # detailed description of file structure of the project
@@ -29,6 +46,10 @@ GYMSYNC/
 │   │
 │   ├── routes/
 │   │   └── userRoutes.js                           # routes to access the user collection
+│   │ 
+│   ├── test/
+│   │   ├── userTest.js                             # test script to check the creation of user and other related cases
+│   │   └── attendanceTest.js                       # test script to check the working of attendace updation
 │   │
 │   ├── info.txt                                    # init file
 │   ├── index.js                                    # server file
@@ -37,11 +58,13 @@ GYMSYNC/
 │ 
 ├── ui_structure/
 │   ├── adminUI/
+│   │ 
 │   ├── clientUI/
+│   │ 
 │   └── clientUI/
 │ 
 ├── .gitignore                                      # files to be ignored when making a commit
-├── README.md                                       # files to be ignored when making a commit
+├── README.md                                       # project documentation
 └── gym_sync_full_app_architecture_mern_stack.md    # entire architecture of the project
 ```
 

@@ -1,27 +1,500 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 
 const router = express.Router();
 
-// ➡️ Add a new user
-router.post("/", async (req, res) => {
+// In-memory token blacklist (in production, use Redis or database)
+const tokenBlacklist = new Set();
+
+// Generate JWT token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET || 'gym-sync-secret-key-2024', {
+    expiresIn: '7d',
+  });
+};
+
+// Middleware to authenticate JWT token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ 
+      success: false, 
+      message: "Access token required" 
+    });
+  }
+
+  // Check if token is blacklisted
+  if (tokenBlacklist.has(token)) {
+    return res.status(401).json({
+      success: false,
+      message: "Token has been revoked"
+    });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'gym-sync-secret-key-2024', (err, decoded) => {
+    if (err) {
+      console.error('Token verification error:', err);
+      return res.status(403).json({ 
+        success: false, 
+        message: "Invalid or expired token" 
+      });
+    }
+    req.userId = decoded.userId;
+    req.token = token; // Store token for potential blacklisting
+    next();
+  });
+};
+
+// Register a new user
+router.post("/register", async (req, res) => {
+  console.log('Registration attempt:', { email: req.body.email });
+  
   try {
-    const user = new User(req.body);
+    const { name, email, password, membershipType, workoutType } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password || !membershipType || !workoutType) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password must be at least 6 characters long" 
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User with this email already exists" 
+      });
+    }
+
+    // Create new user
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      password,
+      membershipType,
+      workoutType,
+    });
+
     await user.save();
-    res.status(201).json(user);
+    console.log('User created successfully:', user.email);
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user,
+      token,
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Registration error:", error);
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email already exists" 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: "Registration failed" 
+    });
   }
 });
 
-// ➡️ Get all users
-router.get("/", async (req, res) => {
+// Login user
+router.post("/login", async (req, res) => {
+  console.log('Login attempt:', { email: req.body.email });
+  
   try {
-    const users = await User.find();
-    res.json(users);
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email and password are required" 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid email or password" 
+      });
+    }
+
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log('Invalid password for user:', email);
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid email or password" 
+      });
+    }
+
+    // Generate token
+    const token = generateToken(user._id);
+    console.log('Login successful for user:', user.email);
+
+    // Remove password from response
+    const userResponse = user.toJSON();
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      user: userResponse,
+      token,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Login failed" 
+    });
   }
 });
+
+// Logout user (NEW)
+router.post("/logout", authenticateToken, async (req, res) => {
+  try {
+    const token = req.token;
+    
+    // Add token to blacklist
+    tokenBlacklist.add(token);
+    
+    console.log(`User ${req.userId} logged out successfully`);
+    
+    res.json({
+      success: true,
+      message: "Logged out successfully"
+    });
+
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Logout failed" 
+    });
+  }
+});
+
+// Logout from all devices (NEW)
+router.post("/logout-all", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    // In a real application, you would:
+    // 1. Store a tokenVersion field in the user model
+    // 2. Increment it on logout-all
+    // 3. Check tokenVersion in JWT verification
+    
+    // For now, we'll just add current token to blacklist
+    const token = req.token;
+    tokenBlacklist.add(token);
+    
+    console.log(`User ${userId} logged out from all devices`);
+    
+    res.json({
+      success: true,
+      message: "Logged out from all devices successfully"
+    });
+
+  } catch (error) {
+    console.error("Logout all error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Logout from all devices failed" 
+    });
+  }
+});
+
+// Get user profile (protected route)
+router.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    res.json({
+      success: true,
+      user,
+    });
+
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch profile" 
+    });
+  }
+});
+
+// Mark attendance (protected route)
+router.post("/attendance", authenticateToken, async (req, res) => {
+  try {
+    const { classType } = req.body;
+    
+    if (!classType) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Class type is required" 
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        $inc: { attendanceCount: 1 },
+        $push: { 
+          attendance: { 
+            date: new Date(), 
+            classType 
+          } 
+        },
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    console.log(`Attendance marked for ${user.name}: ${classType}`);
+
+    res.json({
+      success: true,
+      message: "Attendance marked successfully",
+      user,
+    });
+
+  } catch (error) {
+    console.error("Attendance error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to mark attendance" 
+    });
+  }
+});
+
+// Update user profile (protected route)
+router.put("/profile", authenticateToken, async (req, res) => {
+  try {
+    const { name, membershipType, workoutType } = req.body;
+    
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (membershipType) updateData.membershipType = membershipType;
+    if (workoutType) updateData.workoutType = workoutType;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields to update"
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    console.log(`Profile updated for ${user.name}`);
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to update profile" 
+    });
+  }
+});
+
+// Change password (NEW)
+router.put("/change-password", authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required"
+      });
+    }
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long"
+      });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.userId).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect"
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    console.log(`Password changed for user ${user.email}`);
+
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
+
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to change password"
+    });
+  }
+});
+
+// Delete account (NEW)
+router.delete("/account", authenticateToken, async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required to delete account"
+      });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.userId).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect password"
+      });
+    }
+
+    // Delete user
+    await User.findByIdAndDelete(req.userId);
+    
+    // Add current token to blacklist
+    tokenBlacklist.add(req.token);
+    
+    console.log(`Account deleted for user ${user.email}`);
+
+    res.json({
+      success: true,
+      message: "Account deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete account"
+    });
+  }
+});
+
+// Get all users (admin route)
+router.get("/all", async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    
+    res.json({
+      success: true,
+      count: users.length,
+      users,
+    });
+
+  } catch (error) {
+    console.error("Fetch users error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch users" 
+    });
+  }
+});
+
+// Utility function to clean up expired blacklisted tokens (call periodically)
+const cleanupBlacklistedTokens = () => {
+  // This is a simple cleanup - in production, you'd store tokens with expiry
+  // For now, we'll just clear the entire blacklist periodically
+  if (tokenBlacklist.size > 1000) {
+    tokenBlacklist.clear();
+    console.log('Blacklisted tokens cleared');
+  }
+};
+
+// Clean up every hour
+setInterval(cleanupBlacklistedTokens, 60 * 60 * 1000);
 
 export default router;

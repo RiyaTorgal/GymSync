@@ -11,7 +11,8 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Exercise {
   id: string;
@@ -469,7 +470,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
         {plan ? (
           <View style={styles.planInfo}>
             <View style={styles.planHeader}>
-              <Icon 
+              <MaterialIcons 
                 name={getTypeIcon(plan.type)} 
                 size={20} 
                 color={isToday ? '#2563eb' : '#6b7280'} 
@@ -491,7 +492,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
           </View>
         ) : (
           <View style={styles.restDay}>
-            <Icon name="spa" size={20} color="#6b7280" />
+            <MaterialIcons name="spa" size={20} color="#6b7280" />
             <Text style={styles.restDayText}>Rest Day</Text>
           </View>
         )}
@@ -523,21 +524,21 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
                 style={styles.startButton}
                 onPress={() => startWorkout(todaysPlan)}
               >
-                <Icon name="play-arrow" size={24} color="white" />
+                <MaterialIcons name="play-arrow" size={24} color="white" />
               </TouchableOpacity>
             </View>
             <Text style={styles.workoutDescription}>{todaysPlan.description}</Text>
             <View style={styles.workoutStats}>
               <View style={styles.statItem}>
-                <Icon name="fitness-center" size={16} color="#6b7280" />
+                <MaterialIcons name="fitness-center" size={16} color="#6b7280" />
                 <Text style={styles.statText}>{todaysPlan.type}</Text>
               </View>
               <View style={styles.statItem}>
-                <Icon name="schedule" size={16} color="#6b7280" />
+                <MaterialIcons name="schedule" size={16} color="#6b7280" />
                 <Text style={styles.statText}>{todaysPlan.duration}</Text>
               </View>
               <View style={styles.statItem}>
-                <Icon name="local-fire-department" size={16} color="#6b7280" />
+                <MaterialIcons name="local-fire-department" size={16} color="#6b7280" />
                 <Text style={styles.statText}>{todaysPlan.caloriesBurn} cal</Text>
               </View>
             </View>
@@ -564,7 +565,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
           >
             <View style={styles.planCardHeader}>
               <View style={styles.planIconContainer}>
-                <Icon name={getTypeIcon(plan.type)} size={24} color="#2563eb" />
+                <MaterialIcons name={getTypeIcon(plan.type)} size={24} color="#2563eb" />
               </View>
               <View style={styles.planCardContent}>
                 <Text style={styles.planCardName}>{plan.name}</Text>
@@ -602,7 +603,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
             >
-              <Icon name="close" size={24} color="#1f2937" />
+              <MaterialIcons name="close" size={24} color="#1f2937" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>{selectedPlan?.name}</Text>
             <View style={styles.placeholder} />
@@ -612,15 +613,15 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
             <ScrollView style={styles.modalContent}>
               <View style={styles.modalStats}>
                 <View style={styles.modalStatItem}>
-                  <Icon name="schedule" size={20} color="#6b7280" />
+                  <MaterialIcons name="schedule" size={20} color="#6b7280" />
                   <Text style={styles.modalStatText}>{selectedPlan.duration}</Text>
                 </View>
                 <View style={styles.modalStatItem}>
-                  <Icon name="fitness-center" size={20} color="#6b7280" />
+                  <MaterialIcons name="fitness-center" size={20} color="#6b7280" />
                   <Text style={styles.modalStatText}>{selectedPlan.exercises.length} exercises</Text>
                 </View>
                 <View style={styles.modalStatItem}>
-                  <Icon name="local-fire-department" size={20} color="#6b7280" />
+                  <MaterialIcons name="local-fire-department" size={20} color="#6b7280" />
                   <Text style={styles.modalStatText}>{selectedPlan.caloriesBurn} cal</Text>
                 </View>
               </View>
@@ -650,7 +651,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
               <TouchableOpacity 
                 onPress={() => setExerciseModalVisible(false)}
               >
-                <Icon name="close" size={24} color="#6b7280" />
+                <MaterialIcons name="close" size={24} color="#6b7280" />
               </TouchableOpacity>
             </View>
             
@@ -680,7 +681,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
                 
                 {activeExercise.equipment && (
                   <View style={styles.exerciseModalEquipment}>
-                    <Icon name="fitness-center" size={16} color="#6b7280" />
+                    <MaterialIcons name="fitness-center" size={16} color="#6b7280" />
                     <Text style={styles.exerciseModalEquipmentText}>
                       Equipment: {activeExercise.equipment}
                     </Text>

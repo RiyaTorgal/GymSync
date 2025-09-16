@@ -9,7 +9,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface User {
   _id?: string;
@@ -135,20 +136,20 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
           <Text style={styles.userName}>{user.name}!</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
-          <Icon name="account-circle" size={32} color="#2563eb" />
+          <MaterialIcons name="account-circle" size={32} color="#2563eb" />
         </TouchableOpacity>
       </View>
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Icon name="fitness-center" size={24} color="#2563eb" />
+          <MaterialIcons name="fitness-center" size={24} color="#2563eb" />
           <Text style={styles.statNumber}>{attendanceCount}</Text>
           <Text style={styles.statLabel}>Total Workouts</Text>
         </View>
         
         <View style={styles.statCard}>
-          <Icon name="calendar-today" size={24} color="#10b981" />
+          <MaterialIcons name="calendar-today" size={24} color="#10b981" />
           <Text style={styles.statNumber}>12</Text>
           <Text style={styles.statLabel}>This Month</Text>
         </View>
@@ -177,7 +178,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
               ]}
               onPress={() => handleQuickCheckIn(type)}
             >
-              <Icon 
+              <MaterialIcons 
                 name={
                   type === 'Cardio' ? 'directions-run' :
                   type === 'Strength' ? 'fitness-center' :
@@ -211,7 +212,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
             {recentAttendance.map((activity, index) => (
               <View key={index} style={styles.activityItem}>
                 <View style={styles.activityIcon}>
-                  <Icon name="check-circle" size={20} color="#10b981" />
+                  <MaterialIcons name="check-circle" size={20} color="#10b981" />
                 </View>
                 <View style={styles.activityContent}>
                   <Text style={styles.activityType}>{activity.classType}</Text>
@@ -224,7 +225,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Icon name="event-busy" size={48} color="#d1d5db" />
+            <MaterialIcons name="event-busy" size={48} color="#d1d5db" />
             <Text style={styles.emptyStateText}>
               No recent activity
             </Text>

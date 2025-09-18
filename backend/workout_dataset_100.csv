@@ -1,0 +1,121 @@
+ID,Name,Type,Section,Muscle,Equipment,Difficulty,Instructions,Sets,Reps,RestTime
+1,Push-Up,Strength,Upper Body,"Chest, Triceps",Bodyweight,Beginner,"Start in a high plank with hands slightly wider than shoulders. Lower chest near the floor, then push back up. Keep core tight.",3,10,60s
+2,Bench Press,Strength,Upper Body,Chest,Barbell,Intermediate,"Lie flat on bench, grip bar shoulder-width. Lower bar to chest, press upward until arms fully extended.",4,10,90s
+3,Incline Dumbbell Press,Strength,Upper Body,Chest,Dumbbell,Intermediate,"Sit on incline bench holding dumbbells. Press weights upward until arms extend, then lower to chest level.",4,10,90s
+4,Chest Fly,Strength,Upper Body,Chest,Dumbbell / Machine,Beginner-Intermediate,"Lie on bench with dumbbells overhead. Lower arms wide in an arc, keeping slight bend in elbows, then bring them back together.",3,12,60s
+5,Cable Crossover,Strength,Upper Body,Chest,Cable Machine,Intermediate,"Stand between cables, arms extended out. Pull handles forward in a hugging motion until hands meet, then return slowly.",4,12,90s
+6,Decline Press,Strength,Upper Body,Chest,Barbell / Dumbbell,Intermediate,"Lie on decline bench. Lower bar/dumbbells to chest, then press upward until arms are extended.",4,10,90s
+7,Machine Chest Press,Strength,Upper Body,Chest,Machine,Beginner,"Sit with back on pad. Push handles forward until arms extend, then return slowly to start.",3,10,60s
+8,Wide Push-Up,Strength,Upper Body,Chest,Bodyweight,Beginner,"Place hands wider than shoulders in push-up position. Lower chest close to ground, then push back up.",3,12,60s
+9,Clap Push-Up,Plyometric,Upper Body,Chest,Bodyweight,Advanced,"Perform explosive push-up, clap hands mid-air, and land back softly into push-up position.",5,8,120s
+10,Dumbbell Pullover,Strength,Upper Body,"Chest, Lats",Dumbbell,Intermediate,"Lie on bench holding dumbbell overhead. Lower behind head with arms straight, then pull back to starting position.",4,10,90s
+11,Pull-Up,Strength,Mix,"Back, Biceps",Pull-Up Bar,Intermediate,"Grip bar palms out. Pull body upward until chin clears bar, then lower under control.",4,10,90s
+12,Chin-Up,Strength,Mix,"Back, Biceps",Pull-Up Bar,Intermediate,"Grip bar palms facing you. Pull body upward until chin clears bar, then lower slowly.",4,10,90s
+13,Lat Pulldown,Strength,Core,Back,Cable Machine,Beginner-Intermediate,"Sit at machine, grip bar wide. Pull bar down to chest while squeezing lats, then return slowly upward.",3,12,60s
+14,Seated Row,Strength,Core,Back,Cable Machine,Intermediate,"Sit with feet on platform, pull handles toward torso, then extend arms back under control.",4,10,90s
+15,One-Arm Dumbbell Row,Strength,Core,Back,Dumbbell,Intermediate,"Place one knee on bench, pull dumbbell toward torso keeping back flat, then lower slowly.",4,10,90s
+16,Barbell Row,Strength,Core,Back,Barbell,Intermediate,"Bend forward with flat back. Pull bar toward waist, then lower with control.",4,10,90s
+17,T-Bar Row,Strength,Core,Back,T-Bar Machine,Intermediate,"Stand over T-bar, grip handles, pull weight to chest, then lower slowly.",4,10,90s
+18,Inverted Row,Strength,Core,Back,Bodyweight,Beginner,"Lie under bar, grip overhead, pull chest to bar, then lower under control.",3,10,60s
+19,Good Morning,Strength,Mix,"Back, Hamstrings",Barbell,Advanced,"Place bar on shoulders, hinge hips forward until torso is near parallel, then return upright.",5,8,120s
+20,Hyperextension,Strength,Core,Lower Back,Roman Chair,Beginner,"Secure feet, cross arms over chest, bend forward at waist, then raise torso back up.",3,12,60s
+21,Barbell Curl,Strength,Upper Body,Biceps,Barbell,Beginner,"Stand straight with underhand grip. Curl bar upward by contracting biceps, then lower slowly.",3,10,60s
+22,Dumbbell Curl,Strength,Upper Body,Biceps,Dumbbell,Beginner,"Stand holding dumbbells at sides. Curl weights up by flexing biceps, then lower slowly.",3,10,60s
+23,Hammer Curl,Strength,Upper Body,Biceps,Dumbbell,Beginner-Intermediate,"Hold dumbbells with palms facing each other. Curl weights up, then lower with control.",3,12,60s
+24,Concentration Curl,Strength,Upper Body,Biceps,Dumbbell,Beginner-Intermediate,"Sit on bench, rest elbow on thigh, curl dumbbell up toward shoulder, then lower slowly.",3,12,60s
+25,Preacher Curl,Strength,Upper Body,Biceps,Barbell / Dumbbell,Intermediate,"Rest arms on preacher bench pad, curl weight up fully, then lower under control.",4,10,90s
+26,Incline Dumbbell Curl,Strength,Upper Body,Biceps,Dumbbell,Intermediate,"Sit on incline bench with dumbbells at sides. Curl upward while keeping elbows still, then lower slowly.",4,10,90s
+27,Cable Curl,Strength,Upper Body,Biceps,Cable Machine,Intermediate,"Stand at cable station, curl handle upward with biceps, then lower slowly under control.",4,10,90s
+28,Zottman Curl,Strength,Upper Body,"Biceps, Forearms",Dumbbell,Intermediate,"Curl dumbbells palms up, rotate wrists at top, then lower palms down slowly to target forearms.",4,10,90s
+29,Spider Curl,Strength,Upper Body,Biceps,Barbell / Dumbbell,Intermediate,"Lie chest-down on incline bench, curl weight upward, then lower slowly under control.",4,10,90s
+30,Resistance Band Curl,Strength,Upper Body,Biceps,Resistance Band,Beginner,"Stand on band, grip handles, curl upward by flexing biceps, then lower slowly.",3,12,60s
+31,Tricep Dips,Strength,Upper Body,Triceps,Bodyweight / Bench,Beginner,"Place hands on bench edge, extend legs. Lower body by bending elbows, then push back up.",3,10,60s
+32,Close-Grip Bench Press,Strength,Upper Body,"Triceps, Chest",Barbell,Intermediate,"Lie on bench, grip bar shoulder-width. Lower to chest, press upward while keeping elbows close.",4,10,90s
+33,Overhead Tricep Extension,Strength,Upper Body,Triceps,Dumbbell,Intermediate,"Hold dumbbell overhead with both hands. Lower behind head, then press back up.",4,10,90s
+34,Skull Crushers,Strength,Upper Body,Triceps,EZ Bar / Dumbbell,Intermediate,"Lie on bench with bar/dumbbells overhead. Bend elbows to lower toward forehead, then extend arms upward.",4,10,90s
+35,Tricep Kickback,Strength,Upper Body,Triceps,Dumbbell,Beginner-Intermediate,"Bend forward holding dumbbells. Extend arms back fully, then return to start.",3,12,60s
+36,Cable Pushdown,Strength,Upper Body,Triceps,Cable Machine,Beginner-Intermediate,"Grip rope/straight bar at cable station. Push handle down until arms extend, then return slowly.",3,12,60s
+37,Diamond Push-Up,Strength,Upper Body,"Triceps, Chest",Bodyweight,Intermediate,"Start in push-up position, hands together under chest in diamond shape. Lower chest down, then press up.",4,10,90s
+38,Bench Dip,Strength,Upper Body,Triceps,Bodyweight / Bench,Beginner,"Sit on bench edge, hands at sides. Slide forward, lower body, then push up with triceps.",3,10,60s
+39,Rope Overhead Extension,Strength,Upper Body,Triceps,Cable Machine,Intermediate,"Stand with rope handle behind head. Extend arms upward, then slowly return.",4,10,90s
+40,Resistance Band Pushdown,Strength,Upper Body,Triceps,Resistance Band,Beginner,"Anchor band above. Grip handles and push downward until arms extend, then return slowly.",3,12,60s
+41,Shoulder Press,Strength,Upper Body,Shoulders,Dumbbell / Barbell,Intermediate,"Hold dumbbells/barbell at shoulders. Press overhead until arms extend, then lower slowly.",4,10,90s
+42,Arnold Press,Strength,Upper Body,Shoulders,Dumbbell,Intermediate,"Hold dumbbells at chest, palms facing you. Rotate wrists outward while pressing overhead, then lower slowly.",4,10,90s
+43,Lateral Raise,Strength,Upper Body,Shoulders,Dumbbell,Beginner-Intermediate,"Stand holding dumbbells. Raise arms sideways until shoulder height, then lower slowly.",3,12,60s
+44,Front Raise,Strength,Upper Body,Shoulders,Dumbbell,Beginner-Intermediate,"Hold dumbbells at thighs. Raise arms forward to shoulder level, then lower slowly.",3,12,60s
+45,Upright Row,Strength,Upper Body,"Shoulders, Traps",Barbell / Dumbbell,Intermediate,"Hold barbell/dumbbells at thighs. Pull upward to chin, elbows out, then lower with control.",4,10,90s
+46,Face Pull,Strength,Upper Body,"Rear Delts, Traps",Cable Machine,Intermediate,"Grip rope attachment at chest height. Pull toward face with elbows high, then return slowly.",4,10,90s
+47,Reverse Fly,Strength,Upper Body,Rear Delts,Dumbbell / Machine,Intermediate,"Sit on bench or stand bent forward. Raise arms out to sides until parallel, then lower.",4,10,90s
+48,Handstand Push-Up,Strength,Upper Body,Shoulders,Bodyweight,Advanced,"Kick into handstand against wall. Lower head to floor, then press back up.",5,8,120s
+49,Seated Military Press,Strength,Upper Body,Shoulders,Barbell,Intermediate,"Sit on bench with barbell at shoulders. Press overhead until arms extend, then lower slowly.",4,10,90s
+50,Shrugs,Strength,Upper Body,Traps,Dumbbell / Barbell,Beginner,"Hold weights at sides. Shrug shoulders upward as high as possible, then lower under control.",3,12,60s
+51,Squat,Strength,Legs,"Legs, Glutes",Bodyweight / Barbell,Beginner-Intermediate,"Stand with feet shoulder-width apart. Lower hips back and down until thighs are parallel, then push through heels to stand.",3,12,60s
+52,Lunge,Strength,Legs,"Legs, Glutes",Bodyweight / Dumbbell,Beginner-Intermediate,"Step forward with one leg, lower until both knees are at 90°, then push back to start.",3,12,60s
+53,Step-Up,Strength,Legs,"Legs, Glutes",Bodyweight / Dumbbell,Beginner,"Step onto bench/box with one leg, drive through heel to stand tall, then step down slowly.",3,10,60s
+54,Leg Press,Strength,Legs,"Legs, Glutes",Machine,Intermediate,"Sit on machine with feet on platform. Push platform upward by extending legs, then lower under control.",4,10,90s
+55,Romanian Deadlift,Strength,Legs,"Hamstrings, Glutes",Barbell,Intermediate,"Hold barbell in front of thighs, hinge hips back with straight legs, lower bar to shins, then return upright.",4,10,90s
+56,Leg Curl,Strength,Legs,Hamstrings/ Legs,Machine,Beginner-Intermediate,"Sit/lie on machine, hook ankles under pad, curl legs toward glutes, then return slowly.",3,12,60s
+57,Leg Extension,Strength,Legs,Quadriceps,Machine,Beginner-Intermediate,"Sit on machine with shins behind pad. Extend legs fully, then lower slowly.",3,12,60s
+58,Bulgarian Split Squat,Strength,Legs,"Legs, Glutes",Dumbbell / Bodyweight,Intermediate,"Place back foot on bench, step forward with other leg. Lower hips down, then push through front heel to stand.",4,10,90s
+59,Calf Raise,Strength,Legs,Calves,Bodyweight / Dumbbell,Beginner,"Stand with feet shoulder-width. Raise heels off ground as high as possible, then lower slowly.",3,15,60s
+60,Glute Bridge,Strength,Legs,Glutes,Bodyweight / Barbell,Beginner-Intermediate,"Lie on back, bend knees, push hips upward by squeezing glutes, then lower slowly.",3,12,60s
+61,Plank,Isometric,Core,Abs,Bodyweight,Beginner,"Hold push-up position with weight on forearms. Keep body straight from head to heels, core engaged.",3,1,45s
+62,Sit-Up,Strength,Core,Abs,Bodyweight,Beginner,"Lie on back, knees bent, hands behind head. Sit up fully, then lower slowly back to ground.",3,12,60s
+63,Crunch,Strength,Core,Abs,Bodyweight,Beginner,"Lie on back with knees bent. Curl shoulders toward knees using abs, then lower slowly.",3,15,60s
+64,Bicycle Crunch,Strength,Core,Abs,Bodyweight,Beginner-Intermediate,"Lie on back, lift legs, alternate touching elbow to opposite knee in pedaling motion.",3,20,60s
+65,Leg Raise,Strength,Core,Lower Abs,Bodyweight,Intermediate,"Lie on back, lift legs up to 90°, then lower slowly without touching floor.",4,10,90s
+66,Russian Twists,Strength,Core,Obliques,Bodyweight / Medicine Ball,Beginner,"Sit with knees bent, lean back slightly, twist torso side to side holding ball or clasping hands.",3,15,60s
+67,Hanging Leg Raise,Strength,Core,Lower Abs,Pull-Up Bar,Advanced,"Hang from bar with straight legs, raise legs to hip level or higher, then lower under control.",5,8,120s
+68,Mountain Climbers,Cardio,Mix,Core / Cardio,Bodyweight,Beginner-Intermediate,"Start in push-up position, drive knees alternately toward chest quickly while keeping core tight.",3,30,30s
+69,Ab Rollout,Strength,Core,Abs,Ab Wheel / Barbell,Intermediate,"Kneel with wheel/barbell, roll forward until torso is extended, then pull back to start.",4,10,90s
+70,V-Ups,Strength,Core,Abs,Bodyweight,Intermediate,"Lie on back, extend arms overhead, raise legs and torso simultaneously to touch toes.",4,10,90s
+71,Burpee,HIIT / Cardio,Full Body,Full Body,Bodyweight,Intermediate,"From standing, squat down, kick feet back, perform push-up, jump explosively upward.",4,12,90s
+72,Jumping Jacks,Cardio,Full Body,Full Body,Bodyweight,Beginner,"Jump feet apart while raising arms overhead, then return to start. Repeat rhythmically.",3,30,30s
+73,High Knees,Cardio,Full Body,Full Body,Bodyweight,Beginner,"Run in place, bringing knees up toward chest as high as possible quickly.",3,30,30s
+74,Jump Rope,Cardio,Full Body,Full Body,Rope,Beginner-Intermediate,"Jump over rope continuously with small hops, keeping rhythm steady.",3,60,30s
+75,Rowing,Cardio,Full Body,Full Body,Rowing Machine,Intermediate,"Sit on machine, grasp handle, push legs while pulling handle to torso, then return smoothly.",4,500m,60s
+76,Kettlebell Swing,Strength/Cardio,Full Body,Full Body,Kettlebell,Intermediate,"Stand with feet wide, swing kettlebell between legs, drive hips forward to swing it chest height, then let it swing back.",4,15,60s
+77,Box Jump,Plyometric,Mix,"Legs, Full Body",Plyo Box,Intermediate,"Stand before box, jump explosively landing softly on top, then step down and repeat.",4,10,90s
+78,Battle Ropes,Cardio/Strength,Mix,"Arms, Core",Ropes,Intermediate,"Grip rope ends, move arms alternately or together to create waves, keeping core engaged.",4,30s,60s
+79,Farmer-Walk,Strength,Full Body,Full Body,Dumbbell / Kettlebell,Intermediate,"Hold weights at sides, walk a set distance or time with core tight and shoulders back.",4,40m,90s
+80,Sled Push,Strength/Cardio,Mix,"Legs, Full Body",Weighted Sled,Advanced,"Lean into sled, drive forward with powerful steps, pushing for set distance.",5,20m,120s
+81,Arm Circles,Warm-Up (Dynamic),Mix,"Shoulders, Arms",Bodyweight,Beginner,Extend arms to sides and make small to large circles forward and backward.,2,15,20s
+82,Jumping Jacks (Warm-Up),Warm-Up (Dynamic),Mix,"Full Body, Cardio",Bodyweight,Beginner,"Jump feet apart while raising arms overhead, then return to start. Repeat at moderate pace.",2,20,20s
+83,High Knees (Warm-Up),Warm-Up (Dynamic),Mix,"Legs, Core, Cardio",Bodyweight,Beginner,"Run in place, lifting knees high toward chest, keeping fast rhythm.",2,20,20s
+84,Butt Kicks,Warm-Up (Dynamic),Legs,"Hamstrings, Quads",Bodyweight,Beginner,Run in place kicking heels toward glutes quickly while swinging arms.,2,20,20s
+85,Leg Swings (Front/Side),Warm-Up (Dynamic),Legs,"Hips, Legs",Bodyweight,Beginner,"Swing one leg forward/backward and side-to-side, keeping core stable.",2,15,20s
+86,Walking Lunges (Warm-Up),Warm-Up (Dynamic),Legs,"Legs, Glutes",Bodyweight,Beginner,Step forward into lunges alternating legs while walking forward.,2,15,20s
+87,Torso Twists,Warm-Up (Dynamic),Core,"Core, Spine",Bodyweight,Beginner,"Stand tall, rotate torso side to side while keeping hips stable.",2,20,20s
+88,Cat-Cow Stretch,Stretching (Static),Core,"Spine, Back",Bodyweight,Beginner,"On all fours, alternate arching back (cat) and dipping belly (cow) while breathing deeply.",2,1,20s
+89,Child’s Pose,Stretching (Static),Mix,"Back, Hips",Bodyweight,Beginner,"Kneel on floor, sit back on heels, extend arms forward on ground, and relax torso down.",2,1,20s
+90,Cobra Stretch,Stretching (Static),Core,"Abs, Spine",Bodyweight,Beginner,"Lie face down, place hands under shoulders, push chest upward extending spine while hips stay on floor.",2,1,20s
+91,Standing Quad Stretch,Stretching (Static),Legs,Quadriceps,Bodyweight,Beginner,"Stand tall, pull one ankle toward glutes, keep knees together, hold stretch.",2,1,20s
+92,Hamstring Stretch (Seated),Stretching (Static),Legs,Hamstrings,Bodyweight,Beginner,"Sit with legs extended, reach toward toes, keeping back straight and stretching hamstrings.",2,1,20s
+93,Butterfly Stretch,Stretching (Static),Legs,"Inner Thighs, Hips",Bodyweight,Beginner,"Sit with soles of feet together, press knees gently toward floor while leaning forward slightly.",2,1,20s
+94,Hip Flexor Stretch,Stretching (Static),Legs,"Hips, Quads",Bodyweight,Beginner,"Step into lunge position, push hips forward while keeping torso upright.",2,1,20s
+95,Calf Stretch (Wall),Stretching (Static),Legs,Calves,Wall,Beginner,"Place hands on wall, step one foot back, press heel into ground while leaning forward.",2,1,20s
+96,Neck Rolls,Stretching (Dynamic),Mix,"Neck, Shoulders",Bodyweight,Beginner,"Slowly roll head in circular motion, alternating directions, to release tension.",2,10,20s
+97,Shoulder Stretch (Across),Stretching (Static),Mix,"Shoulders, Traps",Bodyweight,Beginner,"Pull one arm across chest, hold with opposite arm to stretch shoulders.",2,1,20s
+98,Overhead Triceps Stretch,Stretching (Static),Mix,"Triceps, Lats",Bodyweight,Beginner,"Raise one arm overhead, bend elbow, pull elbow gently with other hand to stretch triceps.",2,1,20s
+99,Ankle Circles,Warm-Up (Dynamic),Mix,"Ankles, Lower Legs",Bodyweight,Beginner,"Lift foot off ground, rotate ankle clockwise and counterclockwise to improve mobility.",2,15,20s
+100,Dynamic Side Lunge Stretch,Warm-Up/Stretch,Mix,"Inner Thighs, Glutes",Bodyweight,Beginner,"Step sideways into deep lunge, keep one leg straight, alternate sides slowly.",2,10,20s
+101,Dynamic Walking Lunges,Warm-Up (Dynamic),Legs,"Legs, Glutes, Hips",Bodyweight,Intermediate,"Step forward into lunges, alternating legs while walking. Keep torso upright and core tight.",2,15,20s
+102,World’s Greatest Stretch,Stretching (Dynamic),Mix,"Full Body, Hips, Core",Bodyweight,Intermediate,"Step into deep lunge, place hands on floor, rotate torso toward lead leg, then return.",2,10,20s
+103,Spiderman Stretch with Rotation,Stretching (Dynamic),Mix,"Hips, Spine, Core",Bodyweight,Intermediate,"Step into lunge, place hands down, rotate torso outward, raising arm to ceiling.",2,10,20s
+104,Pigeon Pose,Stretching (Static),Legs,"Hips, Glutes",Mat,Intermediate,"Bring one leg forward, extend other behind, lower torso over front leg to stretch hips and glutes.",2,1,20s
+105,Dynamic Hamstring Kicks,Warm-Up (Dynamic),Legs,"Hamstrings, Glutes",Bodyweight,Intermediate,"Swing one leg straight forward like a kick, keeping knee extended and torso upright.",2,15,20s
+106,Side Plank with Reach-Through,Stretching (Dynamic),Core,"Core, Obliques",Bodyweight,Intermediate,"Hold side plank, reach top arm under torso, then rotate back upward.",3,10,30s
+107,Downward Dog to Cobra Flow,Stretching (Flow),Mix,"Spine, Hamstrings, Abs",Bodyweight,Intermediate,"Start in downward dog, transition forward lowering hips into cobra, then return.",2,10,20s
+108,Reverse Lunge with Twist,Warm-Up (Dynamic),Mix,"Legs, Core, Spine",Bodyweight,Intermediate,"Step backward into lunge, rotate torso toward front leg, return and switch sides.",2,12,20s
+109,Resistance Band Shoulder Opener,Stretching (Static),Mix,"Shoulders, Chest",Resistance Band,Intermediate,"Hold band behind back with both hands, gently pull arms outward to open shoulders.",2,1,20s
+110,Wall Angels,Mobility,Mix,"Shoulders, Upper Back",Wall,Intermediate,"Stand with back to wall, arms bent 90°. Slide arms upward keeping them against wall, then return down.",2,15,20s
+111,Deep Squat Hold with Thoracic Rotation,Mobility/Stretching,Mix,"Hips, Back, Core",Bodyweight,Advanced,"Sit in deep squat, place one hand on floor, rotate other arm upward toward ceiling, alternate sides.",3,8,45s
+112,Bridge Pose with Leg Extension,Stretching (Static),Mix,"Glutes, Spine, Core",Bodyweight,Advanced,"Lie on back, lift hips into bridge, extend one leg upward, hold briefly, then switch sides.",3,8,45s
+113,Standing Splits Stretch,Stretching (Static),Legs,"Hamstrings, Hips",Bodyweight,Advanced,"Stand on one leg, extend other leg upward behind, fold torso forward for deep stretch.",2,1,30s
+114,L-Sit Hold,Isometric Strength,Mix,"Core, Hip Flexors",Parallel Bars / Floor,Advanced,"Support body with hands on bars or floor, lift legs straight out in front, hold position.",3,1,45s
+115,Advanced Pigeon Pose (Forward Fold),Stretching (Static),Legs,"Hips, Glutes",Mat,Advanced,"From pigeon pose, fold torso fully over front leg for deeper hip stretch.",2,1,30s
+116,Dragon Pose,Stretching (Static),Legs,"Hips, Quads, Hamstrings",Mat,Advanced,"Step into deep lunge, sink hips down, extend arms upward or forward to intensify stretch.",2,1,30s
+117,Dynamic Cossack Squats,Warm-Up / Mobility,Legs,"Inner Thighs, Hips",Bodyweight,Advanced,"Step sideways into deep squat on one leg, keep opposite leg straight, alternate sides.",3,10,45s
+118,Handstand Wall Walks,Warm-Up / Strength,Mix,"Shoulders, Core",Wall,Advanced,"Start in push-up with feet at wall, walk feet up while walking hands toward wall until nearly vertical, then reverse.",3,5,60s
+119,Jefferson Curl,Mobility/Strength,Mix,"Spine, Hamstrings",Barbell / Light Weight,Advanced,"Stand with barbell in hands, slowly roll spine down vertebra by vertebra lowering weight, then return upright.",3,8,60s
+120,Pancake Stretch,Stretching (Static),Mix,"Hamstrings, Adductors",Bodyweight,Advanced,"Sit with legs spread wide, fold torso forward keeping back flat, reach arms ahead for deep stretch.",2,1,30s

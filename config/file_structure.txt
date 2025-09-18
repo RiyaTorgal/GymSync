@@ -40,7 +40,9 @@ GYMSYNC/
 │   ├── info.txt                                    # init file
 │   ├── index.js                                    # server file
 │   ├── package-lock.json                   
-│   └── package.json
+│   ├── package.json
+│   ├── workout_dataset_100.csv                     # CSV file containing 120 workout exercises in tabular format 
+│   └── workout_dataset_100.json                    # JSON file containing 120 workout exercises as structured objects
 │ 
 ├── ui_structure/
 │   ├── adminUI/

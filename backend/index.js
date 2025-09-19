@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/userRoutes.js";
+import exerciseRoutes from "./routes/excerciseRoutes.js";
 
 // Get current directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,7 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/api/users", userRoutes);
+app.use("/api/exercises", exerciseRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

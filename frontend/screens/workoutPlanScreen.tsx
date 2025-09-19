@@ -1,6 +1,6 @@
 import React, { 
     useState, 
-    // useEffect 
+    useEffect 
 } from 'react';
 import {
   View,
@@ -10,8 +10,9 @@ import {
   ScrollView,
   Modal,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-// import Icon from 'react-native-vector-icons/MaterialIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface Exercise {
@@ -21,9 +22,10 @@ interface Exercise {
   reps: string;
   duration?: string;
   restTime: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  difficulty: 'Beginner' | 'Beginner-Intermediate' | 'Intermediate' | 'Advanced';
   equipment?: string;
   instructions: string;
+  muscleGroups?: string[];
 }
 
 interface WorkoutPlan {
@@ -46,303 +48,144 @@ interface WorkoutPlanScreenProps {
   user: User;
 }
 
+// API configuration - replace with your backend URL
+const API_BASE_URL = 'http://192.168.1.10:5000/api'; // Update this to your backend URL
+
 const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-//   const [selectedDay, setSelectedDay] = useState('Monday');
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
   const [exerciseModalVisible, setExerciseModalVisible] = useState(false);
+  const [workoutPlans, setWorkoutPlans] = useState<{ [key: string]: WorkoutPlan[] }>({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const workoutPlans: { [key: string]: WorkoutPlan[] } = {
-    Cardio: [
-      {
-        id: '1',
-        name: 'HIIT Cardio Blast',
-        type: 'Cardio',
-        duration: '30 min',
-        difficulty: 'Intermediate',
-        caloriesBurn: '300-400',
-        description: 'High-intensity interval training to boost your metabolism',
-        exercises: [
-          {
-            id: '1',
-            name: 'Jumping Jacks',
-            sets: 3,
-            reps: '30 seconds',
-            restTime: '10 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Jump with feet apart while raising arms overhead, then return to starting position.'
-          },
-          {
-            id: '2',
-            name: 'High Knees',
-            sets: 3,
-            reps: '30 seconds',
-            restTime: '10 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Run in place lifting knees as high as possible.'
-          },
-          {
-            id: '3',
-            name: 'Burpees',
-            sets: 3,
-            reps: '10-15',
-            restTime: '30 seconds',
-            difficulty: 'Advanced',
-            instructions: 'Squat down, jump back to plank, do a push-up, jump feet forward, then jump up.'
-          },
-          {
-            id: '4',
-            name: 'Mountain Climbers',
-            sets: 3,
-            reps: '30 seconds',
-            restTime: '15 seconds',
-            difficulty: 'Intermediate',
-            instructions: 'Start in plank position, alternate bringing knees to chest rapidly.'
-          }
-        ]
-      },
-      {
-        id: '2',
-        name: 'Steady State Cardio',
-        type: 'Cardio',
-        duration: '45 min',
-        difficulty: 'Beginner',
-        caloriesBurn: '250-350',
-        description: 'Low-impact steady-state cardio for endurance building',
-        exercises: [
-          {
-            id: '5',
-            name: 'Brisk Walking',
-            sets: 1,
-            reps: '20 minutes',
-            restTime: 'None',
-            difficulty: 'Beginner',
-            instructions: 'Maintain a brisk pace that allows conversation but feels challenging.'
-          },
-          {
-            id: '6',
-            name: 'Stationary Bike',
-            sets: 1,
-            reps: '15 minutes',
-            restTime: 'None',
-            difficulty: 'Beginner',
-            equipment: 'Exercise Bike',
-            instructions: 'Maintain moderate resistance and steady pace.'
-          },
-          {
-            id: '7',
-            name: 'Elliptical',
-            sets: 1,
-            reps: '10 minutes',
-            restTime: 'None',
-            difficulty: 'Beginner',
-            equipment: 'Elliptical Machine',
-            instructions: 'Use arms and legs together for full-body movement.'
-          }
-        ]
+  // Fetch workout plans from backend
+  const fetchWorkoutPlans = async (refresh = false) => {
+    try {
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
-    ],
-    Strength: [
-      {
-        id: '3',
-        name: 'Upper Body Power',
-        type: 'Strength',
-        duration: '45 min',
-        difficulty: 'Intermediate',
-        caloriesBurn: '200-300',
-        description: 'Build upper body strength and muscle definition',
-        exercises: [
-          {
-            id: '8',
-            name: 'Push-ups',
-            sets: 3,
-            reps: '10-15',
-            restTime: '60 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Keep body straight, lower chest to ground, push back up.'
-          },
-          {
-            id: '9',
-            name: 'Dumbbell Rows',
-            sets: 3,
-            reps: '12-15',
-            restTime: '60 seconds',
-            difficulty: 'Intermediate',
-            equipment: 'Dumbbells',
-            instructions: 'Bend over, pull weights to chest, squeeze shoulder blades.'
-          },
-          {
-            id: '10',
-            name: 'Shoulder Press',
-            sets: 3,
-            reps: '10-12',
-            restTime: '90 seconds',
-            difficulty: 'Intermediate',
-            equipment: 'Dumbbells',
-            instructions: 'Press weights overhead from shoulder level.'
-          },
-          {
-            id: '11',
-            name: 'Tricep Dips',
-            sets: 3,
-            reps: '8-12',
-            restTime: '60 seconds',
-            difficulty: 'Intermediate',
-            equipment: 'Chair/Bench',
-            instructions: 'Lower body by bending arms, push back up using triceps.'
-          }
-        ]
-      },
-      {
-        id: '4',
-        name: 'Lower Body Blast',
-        type: 'Strength',
-        duration: '40 min',
-        difficulty: 'Intermediate',
-        caloriesBurn: '250-350',
-        description: 'Strengthen and tone your legs and glutes',
-        exercises: [
-          {
-            id: '12',
-            name: 'Squats',
-            sets: 3,
-            reps: '15-20',
-            restTime: '60 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Lower body as if sitting in chair, keep knees behind toes.'
-          },
-          {
-            id: '13',
-            name: 'Lunges',
-            sets: 3,
-            reps: '12 each leg',
-            restTime: '60 seconds',
-            difficulty: 'Intermediate',
-            instructions: 'Step forward, lower back knee toward ground, push back up.'
-          },
-          {
-            id: '14',
-            name: 'Deadlifts',
-            sets: 3,
-            reps: '10-12',
-            restTime: '90 seconds',
-            difficulty: 'Advanced',
-            equipment: 'Dumbbells/Barbell',
-            instructions: 'Hinge at hips, lower weights while keeping back straight.'
-          },
-          {
-            id: '15',
-            name: 'Calf Raises',
-            sets: 3,
-            reps: '15-20',
-            restTime: '45 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Rise up on toes, squeeze calves, lower slowly.'
-          }
-        ]
+      setError(null);
+
+      // Use the correct endpoint - get exercises by type
+      const response = await fetch(`${API_BASE_URL}/exercises/type/${user.workoutType}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    ],
-    Flexibility: [
-      {
-        id: '5',
-        name: 'Full Body Stretch',
-        type: 'Flexibility',
-        duration: '25 min',
-        difficulty: 'Beginner',
-        caloriesBurn: '50-100',
-        description: 'Improve flexibility and reduce muscle tension',
-        exercises: [
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Transform the exercises into "plans" format
+        const plans = [
           {
-            id: '16',
-            name: 'Cat-Cow Stretch',
-            sets: 1,
-            reps: '10 reps',
-            restTime: 'None',
-            difficulty: 'Beginner',
-            instructions: 'On hands and knees, arch and round spine alternately.'
-          },
+            id: `plan-${user.workoutType}-${Date.now()}`,
+            name: `${user.workoutType} Workout Plan`,
+            type: user.workoutType,
+            duration: `${data.count * 5} min`, // Rough estimate
+            difficulty: 'Mixed',
+            caloriesBurn: `${data.count * 20}-${data.count * 30}`,
+            description: `Comprehensive ${user.workoutType.toLowerCase()} workout with ${data.count} exercises`,
+            exercises: data.exercises.map((ex: any) => ({
+              id: ex.ID.toString(),
+              name: ex.Name,
+              sets: ex.Sets,
+              reps: ex.Reps,
+              restTime: ex.RestTime,
+              difficulty: ex.Difficulty,
+              equipment: ex.Equipment,
+              instructions: ex.Instructions,
+              muscleGroups: ex.Muscle ? ex.Muscle.split(',').map((m: string) => m.trim()) : ex.TargetMuscleGroups,
+            })),
+          }
+        ];
+        
+        setWorkoutPlans({ [user.workoutType]: plans });
+      } else {
+        throw new Error(data.message || 'Failed to fetch workout plans');
+      }
+    } catch (err) {
+      console.error('Error fetching workout plans:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load workout plans');
+      
+      // Fallback to sample data if API fails
+      setWorkoutPlans({
+        [user.workoutType]: [
           {
-            id: '17',
-            name: 'Downward Dog',
-            sets: 1,
-            reps: '30 seconds',
-            restTime: '10 seconds',
+            id: 'fallback-1',
+            name: `${user.workoutType} Starter`,
+            type: user.workoutType,
+            duration: '30 min',
             difficulty: 'Beginner',
-            instructions: 'Form inverted V-shape with body, press heels down.'
-          },
-          {
-            id: '18',
-            name: 'Hip Flexor Stretch',
-            sets: 2,
-            reps: '30 seconds each side',
-            restTime: '15 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Lunge position, push hips forward to stretch front of hip.'
-          },
-          {
-            id: '19',
-            name: 'Hamstring Stretch',
-            sets: 2,
-            reps: '30 seconds each leg',
-            restTime: '15 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Sit with one leg extended, reach toward toes.'
+            caloriesBurn: '200-300',
+            description: 'A basic workout to get you started. Connect to the internet to load more workouts.',
+            exercises: [
+              {
+                id: '1',
+                name: 'Basic Exercise',
+                sets: 3,
+                reps: '10-15',
+                restTime: '60s',
+                difficulty: 'Beginner',
+                instructions: 'Please connect to the internet to load complete exercise database.'
+              }
+            ]
           }
         ]
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Create custom workout plan
+  const createCustomWorkout = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/exercises/workout-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workoutType: user.workoutType,
+          difficulty: 'Intermediate',
+          duration: 30,
+          exerciseCount: 6
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        Alert.alert(
+          'Custom Workout Created',
+          'A new personalized workout has been generated for you!',
+          [
+            { text: 'View Now', onPress: () => startWorkout(data.workoutPlan) },
+            { text: 'Later', style: 'cancel' }
+          ]
+        );
       }
-    ],
-    Balance: [
-      {
-        id: '6',
-        name: 'Core & Balance',
-        type: 'Balance',
-        duration: '35 min',
-        difficulty: 'Intermediate',
-        caloriesBurn: '150-250',
-        description: 'Improve core stability and balance',
-        exercises: [
-          {
-            id: '20',
-            name: 'Single Leg Stand',
-            sets: 3,
-            reps: '30 seconds each leg',
-            restTime: '30 seconds',
-            difficulty: 'Beginner',
-            instructions: 'Stand on one leg, maintain balance without support.'
-          },
-          {
-            id: '21',
-            name: 'Plank',
-            sets: 3,
-            reps: '30-60 seconds',
-            restTime: '60 seconds',
-            difficulty: 'Intermediate',
-            instructions: 'Hold straight line from head to heels.'
-          },
-          {
-            id: '22',
-            name: 'Tree Pose',
-            sets: 2,
-            reps: '30 seconds each side',
-            restTime: '30 seconds',
-            difficulty: 'Intermediate',
-            instructions: 'Stand on one leg, place other foot on inner thigh.'
-          },
-          {
-            id: '23',
-            name: 'Bird Dog',
-            sets: 3,
-            reps: '10 each side',
-            restTime: '45 seconds',
-            difficulty: 'Intermediate',
-            instructions: 'On hands and knees, extend opposite arm and leg.'
-          }
-        ]
-      }
-    ]
+    } catch (err) {
+      console.error('Error creating custom workout:', err);
+      Alert.alert('Error', 'Failed to create custom workout. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkoutPlans();
+  }, [user.workoutType]);
+
+  const onRefresh = () => {
+    fetchWorkoutPlans(true);
   };
 
   const getWeeklySchedule = () => {
@@ -352,9 +195,9 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
     daysOfWeek.forEach((day, index) => {
       if (index < 5) { // Workout on weekdays
         schedule[day] = userPlans[index % userPlans.length] || null;
-      } else if (index === 5) { // Saturday - lighter workout
-        schedule[day] = userPlans[0] || null;
-      } else { // Sunday - rest day
+      } else if (index === 5 && userPlans.length > 0) { // Saturday - lighter workout
+        schedule[day] = userPlans[0];
+      } else { // Sunday - rest day or if no plans available
         schedule[day] = null;
       }
     });
@@ -365,6 +208,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner': return '#10b981';
+      case 'Beginner-Intermediate': return '#059669';
       case 'Intermediate': return '#f59e0b';
       case 'Advanced': return '#ef4444';
       default: return '#6b7280';
@@ -421,6 +265,11 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
         {exercise.equipment && (
           <Text style={styles.exerciseEquipment}>Equipment: {exercise.equipment}</Text>
         )}
+        {exercise.muscleGroups && exercise.muscleGroups.length > 0 && (
+          <Text style={styles.exerciseMuscles}>
+            Targets: {exercise.muscleGroups.join(', ')}
+          </Text>
+        )}
       </View>
       <View style={[
         styles.difficultyBadge,
@@ -449,77 +298,114 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
           isToday && styles.todayCard,
           isPast && styles.pastCard
         ]}
-        onPress={() => plan && startWorkout(plan)}
         disabled={!plan}
+        onPress={() => plan && startWorkout(plan)}
       >
         <View style={styles.dayHeader}>
-          <Text style={[
-            styles.dayName,
-            isToday && styles.todayText,
-            isPast && styles.pastText
-          ]}>
+          <Text style={[styles.dayName, isToday && styles.todayText, isPast && styles.pastText]}>
             {day}
           </Text>
           {isToday && (
             <View style={styles.todayBadge}>
-              <Text style={styles.todayBadgeText}>TODAY</Text>
+              <Text style={styles.todayBadgeText}>Today</Text>
             </View>
           )}
+          {plan ? (
+            <Text style={styles.planDuration}>{plan.duration}</Text>
+          ) : (
+            <Text style={styles.restDayText}>Rest Day</Text>
+          )}
         </View>
-        
         {plan ? (
           <View style={styles.planInfo}>
             <View style={styles.planHeader}>
-              <MaterialIcons 
-                name={getTypeIcon(plan.type)} 
-                size={20} 
-                color={isToday ? '#2563eb' : '#6b7280'} 
-              />
-              <Text style={[
-                styles.planName,
-                isToday && styles.todayText,
-                isPast && styles.pastText
-              ]}>
-                {plan.name}
-              </Text>
+              <Text style={styles.planName}>{plan.name}</Text>
             </View>
-            <Text style={[
-              styles.planDuration,
-              isPast && styles.pastText
-            ]}>
-              {plan.duration} • {plan.exercises.length} exercises
-            </Text>
+            <Text style={styles.planDuration}>{plan.description}</Text>
           </View>
         ) : (
           <View style={styles.restDay}>
-            <MaterialIcons name="spa" size={20} color="#6b7280" />
-            <Text style={styles.restDayText}>Rest Day</Text>
+            <MaterialIcons name="spa" size={16} color="#6b7280" />
+            <Text style={styles.restDayText}>Take a break and recover</Text>
           </View>
         )}
       </TouchableOpacity>
     );
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Workout Plans</Text>
-        <Text style={styles.subtitle}>Personalized for {user.workoutType.toLowerCase()} training</Text>
+  const renderWorkoutPlan = (plan: WorkoutPlan, index: number) => (
+    <View key={plan.id} style={styles.planCard}>
+      <View style={styles.planCardHeader}>
+        <View style={styles.planIconContainer}>
+          <MaterialIcons name={getTypeIcon(plan.type)} size={24} color="#2563eb" />
+        </View>
+        <View style={styles.planCardContent}>
+          <Text style={styles.planCardName}>{plan.name}</Text>
+          <Text style={styles.planCardDetails}>{plan.type} • {plan.duration} • {plan.caloriesBurn} cal</Text>
+        </View>
+        <View style={[
+          styles.difficultyBadge,
+          { backgroundColor: getDifficultyColor(plan.difficulty) + '20' }
+        ]}>
+          <Text style={[
+            styles.difficultyText,
+            { color: getDifficultyColor(plan.difficulty) }
+          ]}>
+            {plan.difficulty}
+          </Text>
+        </View>
       </View>
+      <Text style={styles.planCardDescription}>{plan.description}</Text>
+      <TouchableOpacity 
+        style={styles.startButton}
+        onPress={() => startWorkout(plan)}
+      >
+        <MaterialIcons name="play-arrow" size={24} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
 
-      {/* Today's Workout */}
-      {todaysPlan && (
-        <View style={styles.section}>
+  const renderWarning = () => (
+    <View style={styles.warningContainer}>
+      <MaterialIcons name="warning" size={16} color="#d97706" />
+      <Text style={styles.warningText}>
+        {error}
+      </Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      {error && renderWarning()}
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today&apos;s Workout</Text>
+          <TouchableOpacity 
+            style={styles.customWorkoutButton}
+            onPress={createCustomWorkout}
+          >
+            <MaterialIcons name="auto-awesome" size={16} color="#2563eb" />
+            <Text style={styles.customWorkoutText}>Create Custom</Text>
+          </TouchableOpacity>
+        </View>
+        {todaysPlan ? (
           <View style={styles.todaysWorkout}>
             <View style={styles.workoutHeader}>
-              <View>
-                <Text style={styles.workoutName}>{todaysPlan.name}</Text>
-                <Text style={styles.workoutDetails}>
-                  {todaysPlan.duration} • {todaysPlan.exercises.length} exercises • {todaysPlan.caloriesBurn} cal
-                </Text>
-              </View>
+              <Text style={styles.workoutName}>{todaysPlan.name}</Text>
               <TouchableOpacity 
                 style={styles.startButton}
                 onPress={() => startWorkout(todaysPlan)}
@@ -527,26 +413,39 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
                 <MaterialIcons name="play-arrow" size={24} color="white" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.workoutDescription}>{todaysPlan.description}</Text>
+            <Text style={styles.workoutDetails}>
+              {todaysPlan.type} • {todaysPlan.duration} • {todaysPlan.caloriesBurn} cal
+            </Text>
+            <Text style={styles.workoutDescription}>
+              {todaysPlan.description}
+            </Text>
             <View style={styles.workoutStats}>
               <View style={styles.statItem}>
                 <MaterialIcons name="fitness-center" size={16} color="#6b7280" />
-                <Text style={styles.statText}>{todaysPlan.type}</Text>
+                <Text style={styles.statText}>{todaysPlan.exercises.length} exercises</Text>
               </View>
               <View style={styles.statItem}>
-                <MaterialIcons name="schedule" size={16} color="#6b7280" />
-                <Text style={styles.statText}>{todaysPlan.duration}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <MaterialIcons name="local-fire-department" size={16} color="#6b7280" />
+                <MaterialIcons name="whatshot" size={16} color="#6b7280" />
                 <Text style={styles.statText}>{todaysPlan.caloriesBurn} cal</Text>
+              </View>
+              <View style={styles.statItem}>
+                <MaterialIcons name="access-time" size={16} color="#6b7280" />
+                <Text style={styles.statText}>{todaysPlan.duration}</Text>
               </View>
             </View>
           </View>
-        </View>
-      )}
+        ) : (
+          <View style={styles.todaysWorkout}>
+            <View style={styles.workoutHeader}>
+              <Text style={styles.workoutName}>Rest Day</Text>
+            </View>
+            <Text style={styles.workoutDescription}>
+              Take a break and recover. Your body needs time to rebuild and get stronger.
+            </Text>
+          </View>
+        )}
+      </View>
 
-      {/* Weekly Schedule */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Weekly Schedule</Text>
         <View style={styles.weeklySchedule}>
@@ -554,43 +453,12 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
         </View>
       </View>
 
-      {/* All Plans */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>All {user.workoutType} Plans</Text>
-        {(workoutPlans[user.workoutType] || []).map(plan => (
-          <TouchableOpacity 
-            key={plan.id}
-            style={styles.planCard}
-            onPress={() => startWorkout(plan)}
-          >
-            <View style={styles.planCardHeader}>
-              <View style={styles.planIconContainer}>
-                <MaterialIcons name={getTypeIcon(plan.type)} size={24} color="#2563eb" />
-              </View>
-              <View style={styles.planCardContent}>
-                <Text style={styles.planCardName}>{plan.name}</Text>
-                <Text style={styles.planCardDetails}>
-                  {plan.duration} • {plan.exercises.length} exercises
-                </Text>
-              </View>
-              <View style={[
-                styles.difficultyBadge,
-                { backgroundColor: getDifficultyColor(plan.difficulty) + '20' }
-              ]}>
-                <Text style={[
-                  styles.difficultyText,
-                  { color: getDifficultyColor(plan.difficulty) }
-                ]}>
-                  {plan.difficulty}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.planCardDescription}>{plan.description}</Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.sectionTitle}>Available Workout Plans</Text>
+        {workoutPlans[user.workoutType]?.map(renderWorkoutPlan)}
       </View>
 
-      {/* Workout Detail Modal */}
+      {/* Workout Modal */}
       <Modal
         animationType="slide"
         transparent={false}
@@ -608,89 +476,87 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
             <Text style={styles.modalTitle}>{selectedPlan?.name}</Text>
             <View style={styles.placeholder} />
           </View>
-          
-          {selectedPlan && (
-            <ScrollView style={styles.modalContent}>
-              <View style={styles.modalStats}>
-                <View style={styles.modalStatItem}>
-                  <MaterialIcons name="schedule" size={20} color="#6b7280" />
-                  <Text style={styles.modalStatText}>{selectedPlan.duration}</Text>
-                </View>
-                <View style={styles.modalStatItem}>
-                  <MaterialIcons name="fitness-center" size={20} color="#6b7280" />
-                  <Text style={styles.modalStatText}>{selectedPlan.exercises.length} exercises</Text>
-                </View>
-                <View style={styles.modalStatItem}>
-                  <MaterialIcons name="local-fire-department" size={20} color="#6b7280" />
-                  <Text style={styles.modalStatText}>{selectedPlan.caloriesBurn} cal</Text>
-                </View>
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.modalStats}>
+              <View style={styles.modalStatItem}>
+                <Text style={styles.modalStatText}>Duration</Text>
+                <Text style={styles.modalStatValue}>{selectedPlan?.duration}</Text>
               </View>
-              
-              <Text style={styles.modalDescription}>{selectedPlan.description}</Text>
-              
-              <Text style={styles.exercisesTitle}>Exercises</Text>
-              {selectedPlan.exercises.map((exercise, index) => 
-                renderExercise(exercise, index)
-              )}
-            </ScrollView>
-          )}
+              <View style={styles.modalStatItem}>
+                <Text style={styles.modalStatText}>Exercises</Text>
+                <Text style={styles.modalStatValue}>{selectedPlan?.exercises.length}</Text>
+              </View>
+              <View style={styles.modalStatItem}>
+                <Text style={styles.modalStatText}>Calories</Text>
+                <Text style={styles.modalStatValue}>{selectedPlan?.caloriesBurn}</Text>
+              </View>
+            </View>
+            <Text style={styles.modalDescription}>
+              {selectedPlan?.description}
+            </Text>
+            <Text style={styles.exercisesTitle}>Exercises</Text>
+            {selectedPlan?.exercises.map(renderExercise)}
+          </ScrollView>
         </View>
       </Modal>
 
-      {/* Exercise Detail Modal */}
+      {/* Exercise Details Modal */}
       <Modal
         animationType="fade"
         transparent={true}
         visible={exerciseModalVisible}
         onRequestClose={() => setExerciseModalVisible(false)}
       >
-        <View style={styles.exerciseModalOverlay}>
+        <TouchableOpacity 
+          style={styles.exerciseModalOverlay}
+          activeOpacity={1}
+          onPress={() => setExerciseModalVisible(false)}
+        >
           <View style={styles.exerciseModalContainer}>
             <View style={styles.exerciseModalHeader}>
               <Text style={styles.exerciseModalTitle}>{activeExercise?.name}</Text>
-              <TouchableOpacity 
-                onPress={() => setExerciseModalVisible(false)}
-              >
-                <MaterialIcons name="close" size={24} color="#6b7280" />
+              <TouchableOpacity onPress={() => setExerciseModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color="#1f2937" />
               </TouchableOpacity>
             </View>
-            
-            {activeExercise && (
-              <>
-                <View style={styles.exerciseModalStats}>
-                  <View style={styles.exerciseModalStat}>
-                    <Text style={styles.exerciseModalStatLabel}>Sets</Text>
-                    <Text style={styles.exerciseModalStatValue}>{activeExercise.sets}</Text>
-                  </View>
-                  <View style={styles.exerciseModalStat}>
-                    <Text style={styles.exerciseModalStatLabel}>Reps/Time</Text>
-                    <Text style={styles.exerciseModalStatValue}>{activeExercise.reps}</Text>
-                  </View>
-                  <View style={styles.exerciseModalStat}>
-                    <Text style={styles.exerciseModalStatLabel}>Rest</Text>
-                    <Text style={styles.exerciseModalStatValue}>{activeExercise.restTime}</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.exerciseModalInstructions}>
-                  <Text style={styles.exerciseModalInstructionsTitle}>Instructions</Text>
-                  <Text style={styles.exerciseModalInstructionsText}>
-                    {activeExercise.instructions}
-                  </Text>
-                </View>
-                
-                {activeExercise.equipment && (
-                  <View style={styles.exerciseModalEquipment}>
-                    <MaterialIcons name="fitness-center" size={16} color="#6b7280" />
-                    <Text style={styles.exerciseModalEquipmentText}>
-                      Equipment: {activeExercise.equipment}
-                    </Text>
-                  </View>
-                )}
-              </>
+            <View style={styles.exerciseModalStats}>
+              <View style={styles.exerciseModalStat}>
+                <Text style={styles.exerciseModalStatLabel}>Sets</Text>
+                <Text style={styles.exerciseModalStatValue}>{activeExercise?.sets}</Text>
+              </View>
+              <View style={styles.exerciseModalStat}>
+                <Text style={styles.exerciseModalStatLabel}>Reps</Text>
+                <Text style={styles.exerciseModalStatValue}>{activeExercise?.reps}</Text>
+              </View>
+              <View style={styles.exerciseModalStat}>
+                <Text style={styles.exerciseModalStatLabel}>Rest</Text>
+                <Text style={styles.exerciseModalStatValue}>{activeExercise?.restTime}</Text>
+              </View>
+              <View style={styles.exerciseModalStat}>
+                <Text style={styles.exerciseModalStatLabel}>Level</Text>
+                <Text style={styles.exerciseModalStatValue}>{activeExercise?.difficulty}</Text>
+              </View>
+            </View>
+            <View style={styles.exerciseModalInstructions}>
+              <Text style={styles.exerciseModalInstructionsTitle}>Instructions</Text>
+              <Text style={styles.exerciseModalInstructionsText}>{activeExercise?.instructions}</Text>
+            </View>
+            {activeExercise?.equipment && (
+              <View style={styles.exerciseModalEquipment}>
+                <MaterialIcons name="fitness-center" size={16} color="#2563eb" />
+                <Text style={styles.exerciseModalEquipmentText}>{activeExercise.equipment}</Text>
+              </View>
+            )}
+            {activeExercise?.muscleGroups && activeExercise.muscleGroups.length > 0 && (
+              <View style={styles.exerciseModalMuscles}>
+                <MaterialIcons name="accessibility-new" size={16} color="#059669" />
+                <Text style={styles.exerciseModalMusclesText}>
+                  Targets: {activeExercise.muscleGroups.join(', ')}
+                </Text>
+              </View>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </ScrollView>
   );
@@ -699,32 +565,54 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f3f4f6',
   },
-  header: {
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: 'white',
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 12,
+    gap: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginTop: 4,
+  warningText: {
+    fontSize: 12,
+    color: '#92400e',
   },
   section: {
     margin: 20,
     marginTop: 0,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 16,
+  },
+  customWorkoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
+  },
+  customWorkoutText: {
+    fontSize: 14,
+    color: '#2563eb',
+    fontWeight: '600',
   },
   todaysWorkout: {
     backgroundColor: 'white',
@@ -953,6 +841,11 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontWeight: '600',
   },
+  modalStatValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
   modalDescription: {
     fontSize: 16,
     color: '#6b7280',
@@ -1005,6 +898,11 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     marginTop: 2,
   },
+  exerciseMuscles: {
+    fontSize: 12,
+    color: '#059669',
+    marginTop: 2,
+  },
   exerciseModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1038,14 +936,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   exerciseModalStat: {
     alignItems: 'center',
+    marginBottom: 8,
+    minWidth: 70,
   },
   exerciseModalStatLabel: {
     fontSize: 12,
     color: '#6b7280',
     marginBottom: 4,
+    textAlign: 'center',
   },
   exerciseModalStatValue: {
     fontSize: 16,
@@ -1073,10 +975,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#eff6ff',
     borderRadius: 8,
     padding: 12,
+    marginBottom: 12,
   },
   exerciseModalEquipmentText: {
     fontSize: 14,
     color: '#2563eb',
+    fontWeight: '500',
+  },
+  exerciseModalMuscles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ecfdf5',
+    borderRadius: 8,
+    padding: 12,
+  },
+  exerciseModalMusclesText: {
+    fontSize: 14,
+    color: '#059669',
     fontWeight: '500',
   },
 });

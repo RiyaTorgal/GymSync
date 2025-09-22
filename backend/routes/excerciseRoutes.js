@@ -4,18 +4,79 @@ import Exercise from "../models/excercise.js";
 
 const router = express.Router();
 
+// Weekly schedule configuration - UPDATED targetMuscles to match JSON Muscle strings
+const WEEKLY_SCHEDULE = {
+  Monday: {
+    name: "Legs Day",
+    type: "Strength",
+    targetMuscles: ["Legs", "Glutes", "Hamstrings", "Quadriceps"],
+    keywords: ["Squat", "Lunge", "Leg Extension", "Leg Curl", "Leg Press"],
+    section: "Lower Body",
+    description: "Focus on quadriceps, hamstrings, squats, lunges, leg extensions, leg curls, and leg press"
+  },
+  Tuesday: {
+    name: "Upper Body + Abs",
+    type: "Strength",
+    targetMuscles: ["Shoulders", "Biceps", "Triceps", "Abs", "Core", "Chest"],
+    keywords: ["Shoulder", "Bicep", "Tricep", "Ab", "Core"],
+    section: ["Upper Body", "Core"],
+    description: "Upper body focus on shoulders, biceps, triceps plus core strengthening"
+  },
+  Wednesday: {
+    name: "Inner & Outer Thighs + Back",
+    type: "Strength",
+    targetMuscles: ["Thighs", "Back", "Lats", "Lower Back"],
+    keywords: ["Thigh", "Back", "Lat", "Row"],
+    section: ["Lower Body", "Upper Body"],
+    description: "Target inner and outer thighs with comprehensive back workout"
+  },
+  Thursday: {
+    name: "Core + Cardio",
+    type: ["Strength", "Cardio"],
+    targetMuscles: ["Core", "Abs", "Full Body"],
+    keywords: ["Core", "Cardio", "Plank", "Crunch", "HIIT"],
+    section: ["Core", "Full Body"],
+    description: "Core strengthening combined with cardiovascular training"
+  },
+  Friday: {
+    name: "Legs Day",
+    type: "Strength",
+    targetMuscles: ["Legs", "Glutes", "Hamstrings", "Quadriceps"],
+    keywords: ["Squat", "Lunge", "Leg Extension", "Leg Curl", "Leg Press"],
+    section: "Lower Body",
+    description: "Focus on quadriceps, hamstrings, squats, lunges, leg extensions, leg curls, and leg press"
+  },
+  Saturday: {
+    name: "Upper Body + Abs",
+    type: "Strength",
+    targetMuscles: ["Shoulders", "Biceps", "Triceps", "Abs", "Core", "Chest"],
+    keywords: ["Shoulder", "Bicep", "Tricep", "Ab", "Core"],
+    section: ["Upper Body", "Core"],
+    description: "Upper body focus on shoulders, biceps, triceps plus core strengthening"
+  },
+  Sunday: {
+    name: "Rest Day",
+    type: "Rest",
+    description: "Recovery and rest day - light stretching or mobility work only"
+  }
+};
+
 // ---------------------------------------------------------------------------
-// GET all exercises 
+// GET all exercises (for debugging)
 // ---------------------------------------------------------------------------
-router.get("/", async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     console.log('🔍 Fetching all exercises...');
-    // TEMPORARY: Removed IsActive filter to see all data
     const exercises = await Exercise.find({});
-    console.log(`📊 Found ${exercises.length} total exercises`);
-    res.json({ success: true, count: exercises.length, exercises });
+    console.log(`📊 Found ${exercises.length} exercises`);
+    
+    res.json({ 
+      success: true, 
+      count: exercises.length, 
+      exercises 
+    });
   } catch (err) {
-    console.error('❌ Error fetching exercises:', err);
+    console.error('❌ Error fetching all exercises:', err);
     res.status(500).json({
       success: false,
       message: "Error fetching exercises",
@@ -25,36 +86,99 @@ router.get("/", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET single exercise by ID 
+// GET weekly schedule
 // ---------------------------------------------------------------------------
-router.get("/:id", async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "ID must be a number",
-    });
-  }
-
+router.get("/weekly-schedule", async (req, res) => {
   try {
-    console.log(`🔍 Fetching exercise ID: ${id}`);
+    console.log('📅 Fetching weekly workout schedule...');
     
-    // TEMPORARY: Removed IsActive filter to see all data
-    const exercise = await Exercise.findOne({ ID: id });
-    if (!exercise) {
-      console.log(`❌ Exercise ID ${id} not found`);
-      return res
-        .status(404)
-        .json({ success: false, message: "Exercise not found" });
+    const schedule = {};
+    
+    for (const [day, config] of Object.entries(WEEKLY_SCHEDULE)) {
+      if (config.type === "Rest") {
+        schedule[day] = {
+          name: config.name,
+          type: config.type,
+          description: config.description,
+          exercises: [],
+          totalCalories: 0,
+          estimatedDuration: "0 min",
+          exerciseCount: 0
+        };
+        continue;
+      }
+
+      // Build query for this day - REMOVED IsActive
+      let query = {};
+      
+      // Handle multiple types
+      if (Array.isArray(config.type)) {
+        query.Type = { $in: config.type };
+      } else {
+        query.Type = config.type;
+      }
+
+      // Handle multiple sections
+      if (Array.isArray(config.section)) {
+        query.Section = { $in: config.section };
+      } else if (config.section) {
+        query.Section = config.section;
+      }
+
+      // Add muscle targeting - UPDATED to match Muscle string
+      if (config.targetMuscles && config.targetMuscles.length > 0) {
+        query.Muscle = new RegExp(config.targetMuscles.join("|"), "i");
+      }
+
+      console.log(`🔍 ${day} query:`, JSON.stringify(query, null, 2));
+
+      const exercises = await Exercise.find(query).limit(8); // Limit to 8 exercises per day
+      
+      // Calculate totals
+      let totalCalories = 0;
+      let totalTime = 0;
+      
+      exercises.forEach((ex) => {
+        totalCalories += (ex.Sets * (ex.CaloriesPerSet || 5));
+        totalTime += ex.EstimatedDuration || 3; // Default 3 min per exercise
+      });
+
+      schedule[day] = {
+        name: config.name,
+        type: Array.isArray(config.type) ? config.type.join(" + ") : config.type,
+        description: config.description,
+        exercises: exercises.map((ex) => ({
+          id: ex.ID.toString(),
+          name: ex.Name,
+          sets: ex.Sets,
+          reps: ex.Reps,
+          restTime: ex.RestTime,
+          difficulty: ex.Difficulty,
+          equipment: ex.Equipment,
+          instructions: ex.Instructions,
+          muscleGroups: ex.Muscle ? ex.Muscle.split(',').map(m => m.trim()) : (ex.TargetMuscleGroups || []),
+          type: ex.Type,
+          section: ex.Section,
+        })),
+        totalCalories: totalCalories,
+        estimatedDuration: `${Math.max(totalTime, 20)} min`, // Minimum 20 min
+        exerciseCount: exercises.length
+      };
+      
+      console.log(`✅ ${day}: ${exercises.length} exercises found`);
     }
-    
-    console.log(`✅ Found exercise: ${exercise.Name}`);
-    res.json({ success: true, exercise });
+
+    res.json({
+      success: true,
+      message: "Weekly schedule generated successfully",
+      schedule
+    });
+
   } catch (err) {
-    console.error('❌ Error fetching exercise:', err);
+    console.error('❌ Error fetching weekly schedule:', err);
     res.status(500).json({
       success: false,
-      message: "Error fetching exercise",
+      message: "Error fetching weekly schedule",
       error: err.message,
     });
   }
@@ -68,7 +192,6 @@ router.get("/type/:type", async (req, res) => {
     const { type } = req.params;
     console.log(`🔍 Searching for Type: "${type}"`);
     
-    // TEMPORARY: Removed IsActive filter to see all data
     const exercises = await Exercise.find({ Type: type });
     console.log(`📊 Found ${exercises.length} exercises for Type "${type}"`);
     
@@ -84,14 +207,13 @@ router.get("/type/:type", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET exercises by difficulty 
+// GET exercises by difficulty
 // ---------------------------------------------------------------------------
 router.get("/difficulty/:difficulty", async (req, res) => {
   try {
     const { difficulty } = req.params;
     console.log(`🔍 Searching for Difficulty: "${difficulty}"`);
     
-    // TEMPORARY: Removed IsActive filter to see all data
     const exercises = await Exercise.find({ Difficulty: difficulty });
     console.log(`📊 Found ${exercises.length} exercises for Difficulty "${difficulty}"`);
     
@@ -114,8 +236,7 @@ router.get("/muscle/:muscle", async (req, res) => {
     const { muscle } = req.params;
     console.log(`🔍 Searching for Muscle: "${muscle}"`);
     
-    // Use the static method (which still has IsActive filter)
-    const exercises = await Exercise.FindByMuscleGroup(muscle);
+    const exercises = await Exercise.find({ Muscle: new RegExp(muscle, "i") });
     console.log(`📊 Found ${exercises.length} exercises for Muscle "${muscle}"`);
     
     res.json({ success: true, muscle, count: exercises.length, exercises });
@@ -138,8 +259,7 @@ router.get("/equipment", async (req, res) => {
     const equipmentList = available ? available.split(",") : ["Bodyweight"];
     console.log(`🔍 Searching for Equipment: [${equipmentList.join(', ')}]`);
     
-    // Use the static method (which still has IsActive filter)
-    const exercises = await Exercise.FindByEquipment(equipmentList);
+    const exercises = await Exercise.find({ Equipment: new RegExp(equipmentList.join("|"), "i") });
     console.log(`📊 Found ${exercises.length} exercises for equipment`);
     
     res.json({
@@ -159,7 +279,7 @@ router.get("/equipment", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST – generate custom workout plan 
+// POST — generate custom workout plan
 // ---------------------------------------------------------------------------
 router.post("/workout-plan", async (req, res) => {
   try {
@@ -181,22 +301,21 @@ router.post("/workout-plan", async (req, res) => {
       Balance: ["Isometric", "Stretching (Static)", "Warm-Up (Dynamic)"],
     };
 
-    // TEMPORARY: Removed IsActive filter to see all data
-    let query = {}; 
+    let query = {};
 
     if (workoutType && typeMapping[workoutType]) {
       query.Type = { $in: typeMapping[workoutType] };
       console.log(`🔍 Using Type filter: [${typeMapping[workoutType].join(', ')}]`);
+    } else if (workoutType) {
+      query.Type = workoutType;
     }
+
     if (difficulty) {
       query.Difficulty = difficulty;
       console.log(`🔍 Using Difficulty filter: ${difficulty}`);
     }
     if (targetMuscles?.length) {
-      query.$or = [
-        { Muscle: new RegExp(targetMuscles.join("|"), "i") },
-        { TargetMuscleGroups: { $in: targetMuscles } },
-      ];
+      query.Muscle = new RegExp(targetMuscles.join("|"), "i");
       console.log(`🔍 Using Muscle filter: [${targetMuscles.join(', ')}]`);
     }
     if (equipment?.length) {
@@ -212,9 +331,8 @@ router.post("/workout-plan", async (req, res) => {
     let totalTime = 0;
     let totalCalories = 0;
     exercises.forEach((ex) => {
-      // Use virtual and method names with uppercase
-      totalTime += ex.EstimatedDuration || 2; // Default 2 min if virtual not working
-      totalCalories += ex.CalculateTotalCalories ? ex.CalculateTotalCalories() : (ex.Sets * 5);
+      totalTime += ex.EstimatedDuration || 2;
+      totalCalories += (ex.Sets * (ex.CaloriesPerSet || 5));
     });
 
     const workoutPlan = {
@@ -222,11 +340,11 @@ router.post("/workout-plan", async (req, res) => {
       name: `Custom ${workoutType || 'Full Body'} Workout`,
       type: workoutType || 'Mixed',
       difficulty: difficulty || "Mixed",
-      duration: `${Math.max(totalTime, 15)} min`, // Minimum 15 min
+      duration: `${Math.max(totalTime, 15)} min`,
       caloriesBurn: `${totalCalories}-${Math.ceil(totalCalories * 1.3)}`,
       description: `A personalized ${workoutType?.toLowerCase() || 'full body'} workout targeting your goals`,
       exercises: exercises.map((ex) => ({
-        id: ex.Id.toString(),
+        id: ex.ID.toString(),
         name: ex.Name,
         sets: ex.Sets,
         reps: ex.Reps,
@@ -234,7 +352,7 @@ router.post("/workout-plan", async (req, res) => {
         difficulty: ex.Difficulty,
         equipment: ex.Equipment,
         instructions: ex.Instructions,
-        muscleGroups: ex.TargetMuscleGroups || (ex.Muscle ? ex.Muscle.split(',').map(m => m.trim()) : []),
+        muscleGroups: ex.Muscle ? ex.Muscle.split(',').map(m => m.trim()) : [],
         type: ex.Type,
         section: ex.Section,
       })),
@@ -249,70 +367,6 @@ router.post("/workout-plan", async (req, res) => {
       message: "Error creating workout plan",
       error: err.message,
     });
-  }
-});
-
-
-
-// ---------------------------------------------------------------------------
-// TEMPORARY DEBUG ROUTE - Remove after testing
-// ---------------------------------------------------------------------------
-router.get("/debug/all", async (req, res) => {
-  try {
-    console.log('🔍 Running full debug...');
-    
-    // Get ALL unique field values
-    const uniqueTypes = await Exercise.distinct("Type");
-    const uniqueSections = await Exercise.distinct("Section");
-    const uniqueMuscles = await Exercise.distinct("Muscle");
-    const uniqueDifficulties = await Exercise.distinct("Difficulty");
-    const uniqueEquipment = await Exercise.distinct("Equipment");
-    
-    // Get sample documents
-    const sampleExercises = await Exercise.find({}).limit(5).select('Id Name Type Section Muscle Difficulty Equipment IsActive');
-    
-    // Count documents per Type
-    const typeCounts = await Exercise.aggregate([
-      { $group: { _id: "$Type", count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-    
-    // Check IsActive status
-    const activeCount = await Exercise.countDocuments({ IsActive: true });
-    const inactiveCount = await Exercise.countDocuments({ IsActive: false });
-    const missingActiveCount = await Exercise.countDocuments({ IsActive: { $exists: false } });
-    
-    res.json({
-      success: true,
-      totalDocuments: await Exercise.countDocuments(),
-      isActiveStats: {
-        active: activeCount,
-        inactive: inactiveCount,
-        missingField: missingActiveCount
-      },
-      debug: {
-        uniqueTypes,
-        uniqueSections,
-        uniqueMuscles,
-        uniqueDifficulties,
-        uniqueEquipment,
-        typeCounts,
-        sampleExercises: sampleExercises.map(doc => ({
-          Id: doc.Id,
-          Name: doc.Name,
-          Type: doc.Type,
-          Section: doc.Section,
-          Muscle: doc.Muscle,
-          Difficulty: doc.Difficulty,
-          Equipment: doc.Equipment,
-          IsActive: doc.IsActive
-        }))
-      },
-      message: "Debug info - check console for detailed logs"
-    });
-  } catch (err) {
-    console.error('❌ Debug error:', err);
-    res.status(500).json({ success: false, error: err.message });
   }
 });
 

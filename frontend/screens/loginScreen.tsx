@@ -27,7 +27,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     password: '',
     confirmPassword: '',
     membershipType: 'Monthly',
-    workoutType: 'Cardio',
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -116,7 +115,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           email: formData.email,
           password: formData.password,
           membershipType: formData.membershipType,
-          workoutType: formData.workoutType,
         }),
       });
 
@@ -151,6 +149,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <Text style={styles.subtitle}>
             {isSignUp ? 'Create your account' : 'Welcome back!'}
           </Text>
+          {isSignUp && (
+            <Text style={styles.scheduleInfo}>
+              Follow our structured weekly workout schedule designed for optimal results
+            </Text>
+          )}
         </View>
 
         <View style={styles.form}>
@@ -208,40 +211,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           )}
 
           {isSignUp && (
-            <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Membership Type</Text>
-                <View style={[styles.pickerContainer, loading && styles.disabled]}>
-                  <Picker
-                    selectedValue={formData.membershipType}
-                    onValueChange={(value) => handleInputChange('membershipType', value)}
-                    style={styles.picker}
-                    enabled={!loading}
-                  >
-                    <Picker.Item label="Monthly" value="Monthly" />
-                    <Picker.Item label="Quarterly" value="Quarterly" />
-                    <Picker.Item label="Annual" value="Annual" />
-                  </Picker>
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Membership Type</Text>
+              <View style={[styles.pickerContainer, loading && styles.disabled]}>
+                <Picker
+                  selectedValue={formData.membershipType}
+                  onValueChange={(value) => handleInputChange('membershipType', value)}
+                  style={styles.picker}
+                  enabled={!loading}
+                >
+                  <Picker.Item label="Monthly" value="Monthly" />
+                  <Picker.Item label="Quarterly" value="Quarterly" />
+                  <Picker.Item label="Annual" value="Annual" />
+                </Picker>
               </View>
+            </View>
+          )}
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Preferred Workout Type</Text>
-                <View style={[styles.pickerContainer, loading && styles.disabled]}>
-                  <Picker
-                    selectedValue={formData.workoutType}
-                    onValueChange={(value) => handleInputChange('workoutType', value)}
-                    style={styles.picker}
-                    enabled={!loading}
-                  >
-                    <Picker.Item label="Cardio" value="Cardio" />
-                    <Picker.Item label="Strength" value="Strength" />
-                    <Picker.Item label="Flexibility" value="Flexibility" />
-                    <Picker.Item label="Balance" value="Balance" />
-                  </Picker>
-                </View>
+          {isSignUp && (
+            <View style={styles.weeklySchedule}>
+              <Text style={styles.scheduleTitle}>Your Weekly Workout Schedule:</Text>
+              <View style={styles.scheduleList}>
+                <Text style={styles.scheduleItem}>• Monday: Legs (Quads, Hamstrings, Glutes)</Text>
+                <Text style={styles.scheduleItem}>• Tuesday: Upper Body + Abs</Text>
+                <Text style={styles.scheduleItem}>• Wednesday: Inner/Outer Thighs + Back</Text>
+                <Text style={styles.scheduleItem}>• Thursday: Core + Cardio</Text>
+                <Text style={styles.scheduleItem}>• Friday: Legs (Quads, Hamstrings, Glutes)</Text>
+                <Text style={styles.scheduleItem}>• Saturday: Upper Body + Abs</Text>
+                <Text style={styles.scheduleItem}>• Sunday: Rest Day</Text>
               </View>
-            </>
+            </View>
           )}
 
           <TouchableOpacity
@@ -299,6 +298,13 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    marginBottom: 8,
+  },
+  scheduleInfo: {
+    fontSize: 14,
+    color: '#059669',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   form: {
     backgroundColor: 'white',
@@ -335,6 +341,28 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+  },
+  weeklySchedule: {
+    backgroundColor: '#f0f9ff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  scheduleTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e40af',
+    marginBottom: 8,
+  },
+  scheduleList: {
+    gap: 4,
+  },
+  scheduleItem: {
+    fontSize: 12,
+    color: '#1e40af',
+    lineHeight: 16,
   },
   primaryButton: {
     backgroundColor: '#2563eb',

@@ -53,10 +53,10 @@ router.post("/register", async (req, res) => {
   console.log('Registration attempt:', { email: req.body.email });
   
   try {
-    const { name, email, password, membershipType, workoutType } = req.body;
+    const { name, email, password, membershipType } = req.body;
 
-    // Validate required fields
-    if (!name || !email || !password || !membershipType || !workoutType) {
+    // Validate required fields - removed workoutType
+    if (!name || !email || !password || !membershipType) {
       return res.status(400).json({ 
         success: false, 
         message: "All fields are required" 
@@ -80,13 +80,12 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user - removed workoutType
     const user = new User({
       name,
       email: email.toLowerCase(),
       password,
       membershipType,
-      workoutType,
     });
 
     await user.save();
@@ -177,7 +176,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Logout user (NEW)
+// Logout user
 router.post("/logout", authenticateToken, async (req, res) => {
   try {
     const token = req.token;
@@ -201,7 +200,7 @@ router.post("/logout", authenticateToken, async (req, res) => {
   }
 });
 
-// Logout from all devices (NEW)
+// Logout from all devices
 router.post("/logout-all", authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -306,15 +305,14 @@ router.post("/attendance", authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (protected route)
+// Update user profile (protected route) - removed workoutType
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
-    const { name, membershipType, workoutType } = req.body;
+    const { name, membershipType } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
     if (membershipType) updateData.membershipType = membershipType;
-    if (workoutType) updateData.workoutType = workoutType;
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
@@ -353,7 +351,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-// Change password (NEW)
+// Change password
 router.put("/change-password", authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -412,7 +410,7 @@ router.put("/change-password", authenticateToken, async (req, res) => {
   }
 });
 
-// Delete account (NEW)
+// Delete account
 router.delete("/account", authenticateToken, async (req, res) => {
   try {
     const { password } = req.body;

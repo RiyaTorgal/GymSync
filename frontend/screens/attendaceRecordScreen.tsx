@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import Icon from 'react-native-vector-icons/MaterialIcons';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 interface AttendanceRecord {
   date: string;
@@ -148,11 +148,11 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
 
   const getWorkoutIcon = (classType: string) => {
     switch (classType) {
-      case 'Cardio': return 'directions-run';
-      case 'Strength': return 'fitness-center';
+      case 'Cardio': return 'walk';
+      case 'Strength': return 'barbell';
       case 'Flexibility': return 'accessibility';
-      case 'Balance': return 'balance';
-      default: return 'sports-gymnastics';
+      case 'Balance': return 'scale';
+      default: return 'fitness';
     }
   };
 
@@ -214,7 +214,7 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
         styles.workoutIconContainer,
         { backgroundColor: getWorkoutColor(item.classType) + '15' }
       ]}>
-        <MaterialIcons 
+        <Ionicons 
           name={getWorkoutIcon(item.classType)} 
           size={24} 
           color={getWorkoutColor(item.classType)} 
@@ -227,7 +227,7 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
         </Text>
       </View>
       <View style={styles.checkIcon}>
-        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+        <Ionicons name="checkmark-circle" size={20} color="#10b981" />
       </View>
     </View>
   );
@@ -248,19 +248,19 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <MaterialIcons name="fitness-center" size={24} color="#2563eb" />
+          <Ionicons name="barbell" size={24} color="#2563eb" />
           <Text style={styles.statNumber}>{stats.total}</Text>
           <Text style={styles.statLabel}>Total Sessions</Text>
         </View>
         
         <View style={styles.statCard}>
-          <MaterialIcons name="calendar-today" size={24} color="#10b981" />
+          <Ionicons name="calendar" size={24} color="#10b981" />
           <Text style={styles.statNumber}>{stats.thisMonth}</Text>
           <Text style={styles.statLabel}>This Month</Text>
         </View>
 
         <View style={styles.statCard}>
-          <MaterialIcons name="trending-up" size={24} color="#f59e0b" />
+          <Ionicons name="trending-up" size={24} color="#f59e0b" />
           <Text style={styles.statNumber}>{stats.mostFrequent}</Text>
           <Text style={styles.statLabel}>Most Frequent</Text>
         </View>
@@ -308,7 +308,7 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
           </>
         ) : (
           <View style={styles.emptyState}>
-            <MaterialIcons name="event-busy" size={64} color="#d1d5db" />
+            <Ionicons name="calendar-clear" size={64} color="#d1d5db" />
             <Text style={styles.emptyStateTitle}>No Records Found</Text>
             <Text style={styles.emptyStateText}>
               {selectedFilter === 'All' 
@@ -330,11 +330,11 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 45,
     backgroundColor: 'white',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
   },

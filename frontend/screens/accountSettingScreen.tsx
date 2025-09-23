@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Picker } from '@react-native-picker/picker';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Ionicons } from '@expo/vector-icons';
 
 // API Configuration
 const API_BASE_URL = 'http://192.168.1.10:5000/api/users';
@@ -347,7 +347,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   };
 
   const renderSettingItem = (
-    icon: string, 
+    icon: keyof typeof Ionicons.glyphMap, 
     title: string, 
     subtitle: string, 
     onPress: () => void,
@@ -366,7 +366,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         styles.settingIcon,
         isDestructive && styles.destructiveIcon
       ]}>
-        <Icon 
+        <Ionicons 
           name={icon} 
           size={24} 
           color={isDestructive ? "#ef4444" : "#6b7280"} 
@@ -382,8 +382,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         <Text style={styles.settingSubtitle}>{subtitle}</Text>
       </View>
       {rightElement || (
-        <Icon 
-          name="chevron-right" 
+        <Ionicons 
+          name="chevron-forward" 
           size={20} 
           color="#9ca3af" 
         />
@@ -392,7 +392,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   );
 
   const renderSwitchItem = (
-    icon: string, 
+    icon: keyof typeof Ionicons.glyphMap, 
     title: string, 
     subtitle: string, 
     value: boolean,
@@ -400,7 +400,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   ) => (
     <View style={styles.settingItem}>
       <View style={styles.settingIcon}>
-        <Icon name={icon} size={24} color="#6b7280" />
+        <Ionicons name={icon} size={24} color="#6b7280" />
       </View>
       <View style={styles.settingContent}>
         <Text style={styles.settingTitle}>{title}</Text>
@@ -447,7 +447,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               onPress={() => setEditMode(true)}
               disabled={loading}
             >
-              <Icon name="edit" size={20} color="#2563eb" />
+              <Ionicons name="pencil" size={20} color="#2563eb" />
             </TouchableOpacity>
           </View>
           
@@ -456,8 +456,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               styles.membershipBadge,
               { backgroundColor: getMembershipColor(user.membershipType) + '20' }
             ]}>
-              <Icon 
-                name="card-membership" 
+              <Ionicons 
+                name="card" 
                 size={16} 
                 color={getMembershipColor(user.membershipType)} 
               />
@@ -469,7 +469,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               </Text>
             </View>
             <View style={styles.workoutBadge}>
-              <Icon name="fitness-center" size={16} color="#6b7280" />
+              <Ionicons name="barbell" size={16} color="#6b7280" />
               <Text style={styles.workoutText}>
                 {user.workoutType} Focus
               </Text>
@@ -510,13 +510,13 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
             () => setEditMode(true)
           )}
           {renderSettingItem(
-            'lock',
+            'lock-closed',
             'Change Password',
             'Update your account password',
             () => setChangePasswordModal(true)
           )}
-                    {renderSettingItem(
-            'payment',
+          {renderSettingItem(
+            'card',
             'Membership Plan',
             `Current: ${user.membershipType}`,
             () => Alert.alert('Feature Coming Soon', 'Membership management will be available soon!')
@@ -529,7 +529,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         <Text style={styles.sectionTitle}>Notifications</Text>
         <View style={styles.settingsGroup}>
           {renderSwitchItem(
-            'fitness-center',
+            'barbell',
             'Workout Reminders',
             'Get notified about scheduled workouts',
             notifications.workoutReminders,
@@ -564,21 +564,21 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         <Text style={styles.sectionTitle}>Privacy</Text>
         <View style={styles.settingsGroup}>
           {renderSwitchItem(
-            'visibility',
+            'eye',
             'Profile Visibility',
             'Make your profile visible to other users',
             privacy.profileVisible,
             (value) => setPrivacy(prev => ({ ...prev, profileVisible: value }))
           )}
           {renderSwitchItem(
-            'show-chart',
+            'stats-chart',
             'Show Progress',
             'Allow others to see your workout progress',
             privacy.showProgress,
             (value) => setPrivacy(prev => ({ ...prev, showProgress: value }))
           )}
           {renderSwitchItem(
-            'message',
+            'chatbox',
             'Allow Messages',
             'Receive messages from other users',
             privacy.allowMessages,
@@ -592,27 +592,27 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         <Text style={[styles.sectionTitle, styles.dangerTitle]}>Danger Zone</Text>
         <View style={styles.settingsGroup}>
           {renderSettingItem(
-            'logout',
+            'log-out',
             'Logout',
             'Sign out of your account',
             handleLogout,
-            <Icon name="logout" size={20} color="#ef4444" />,
+            <Ionicons name="log-out" size={20} color="#ef4444" />,
             true
           )}
           {renderSettingItem(
-            'devices',
+            'phone-portrait',
             'Logout All Devices',
             'Sign out of all active sessions',
             handleLogoutFromAllDevices,
-            <Icon name="devices" size={20} color="#ef4444" />,
+            <Ionicons name="phone-portrait" size={20} color="#ef4444" />,
             true
           )}
           {renderSettingItem(
-            'delete-forever',
+            'trash',
             'Delete Account',
             'Permanently delete your account',
             handleDeleteAccount,
-            <Icon name="delete-forever" size={20} color="#ef4444" />,
+            <Ionicons name="trash" size={20} color="#ef4444" />,
             true
           )}
         </View>
@@ -623,8 +623,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
-  header: { padding: 20, paddingTop: 60, backgroundColor: 'white' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1f2937' },
+  header: { padding: 20, paddingTop: 45, backgroundColor: 'white' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
   loadingIndicator: { marginTop: 8 },
   loadingText: { fontSize: 14, color: '#6b7280' },
   section: { margin: 20, marginTop: 0 },

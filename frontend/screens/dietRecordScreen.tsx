@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 // import Icon from 'react-native-vector-icons/MaterialIcons';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 interface FoodItem {
   id: string;
@@ -158,10 +158,10 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
 
   const getMealIcon = (type: string) => {
     switch (type) {
-      case 'Breakfast': return 'free-breakfast';
-      case 'Lunch': return 'lunch-dining';
-      case 'Dinner': return 'dinner-dining';
-      case 'Snack': return 'local-cafe';
+      case 'Breakfast': return 'cafe';
+      case 'Lunch': return 'restaurant';
+      case 'Dinner': return 'pizza';
+      case 'Snack': return 'ice-cream';
       default: return 'restaurant';
     }
   };
@@ -239,7 +239,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
             styles.mealIconContainer,
             { backgroundColor: getMealColor(meal.type) + '20' }
           ]}>
-            <MaterialIcons
+            <Ionicons
               name={getMealIcon(meal.type)} 
               size={20} 
               color={getMealColor(meal.type)} 
@@ -257,7 +257,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
             setModalVisible(true);
           }}
         >
-          <MaterialIcons name="add" size={20} color="#2563eb" />
+          <Ionicons name="add" size={20} color="#2563eb" />
         </TouchableOpacity>
       </View>
       
@@ -275,7 +275,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
                 style={styles.removeButton}
                 onPress={() => removeFoodFromMeal(meal.id, index)}
               >
-                <MaterialIcons name="close" size={16} color="#ef4444" />
+                <Ionicons name="close" size={16} color="#ef4444" />
               </TouchableOpacity>
             </View>
           ))}
@@ -372,7 +372,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
         <Text style={styles.sectionTitle}>Water Intake</Text>
         <View style={styles.waterCard}>
           <View style={styles.waterHeader}>
-            <MaterialIcons name="local-drink" size={24} color="#2563eb" />
+            <Ionicons name="water" size={24} color="#2563eb" />
             <Text style={styles.waterText}>
               {waterIntake} / 8 glasses
             </Text>
@@ -382,13 +382,13 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
               style={styles.waterButton}
               onPress={() => updateWaterIntake(false)}
             >
-              <MaterialIcons name="remove" size={20} color="#6b7280" />
+              <Ionicons name="remove" size={20} color="#6b7280" />
             </TouchableOpacity>
             <View style={styles.waterGlasses}>
               {[...Array(8)].map((_, index) => (
-                <MaterialIcons
+                <Ionicons
                   key={index}
-                  name="local-drink"
+                  name="water"
                   size={20}
                   color={index < waterIntake ? '#2563eb' : '#e5e7eb'}
                 />
@@ -398,7 +398,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
               style={styles.waterButton}
               onPress={() => updateWaterIntake(true)}
             >
-              <MaterialIcons name="add" size={20} color="#6b7280" />
+              <Ionicons name="add" size={20} color="#6b7280" />
             </TouchableOpacity>
           </View>
         </View>
@@ -417,7 +417,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
                     styles.mealIconContainer,
                     { backgroundColor: getMealColor(type) + '20' }
                   ]}>
-                    <MaterialIcons 
+                    <Ionicons 
                       name={getMealIcon(type)} 
                       size={20} 
                       color={getMealColor(type)} 
@@ -432,7 +432,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
                     setModalVisible(true);
                   }}
                 >
-                  <MaterialIcons name="add" size={20} color="#2563eb" />
+                  <Ionicons name="add" size={20} color="#2563eb" />
                 </TouchableOpacity>
               </View>
               <View style={styles.emptyMeal}>
@@ -456,14 +456,14 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
             >
-              <MaterialIcons name="close" size={24} color="#1f2937" />
+              <Ionicons name="close" size={24} color="#1f2937" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Add to {selectedMealType}</Text>
             <View style={styles.placeholder} />
           </View>
           
           <View style={styles.searchContainer}>
-            <MaterialIcons name="search" size={20} color="#6b7280" />
+            <Ionicons name="search" size={20} color="#6b7280" />
             <TextInput
               style={styles.searchInput}
               placeholder="Search for foods..."
@@ -488,7 +488,7 @@ const DietRecordScreen: React.FC<DietRecordScreenProps> = ({ user }) => {
                     P: {food.protein}g • C: {food.carbs}g • F: {food.fat}g
                   </Text>
                 </View>
-                <MaterialIcons name="add-circle-outline" size={24} color="#2563eb" />
+                <Ionicons name="add-circle-outline" size={24} color="#2563eb" />
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -505,11 +505,11 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 45,
     backgroundColor: 'white',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
   },

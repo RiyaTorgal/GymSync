@@ -351,7 +351,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>GymSync Workout Plans</Text>
+          <Text style={styles.title}>Workout Plans</Text>
           <Text style={styles.subtitle}>Hi {user.name}, here&apos;s your weekly schedule</Text>
         </View>
 
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 45,
     // alignItems: 'center',
     marginBottom: 24,
   },

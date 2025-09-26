@@ -57,6 +57,7 @@ interface DashboardScreenProps {
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => {
   const [attendanceCount, setAttendanceCount] = useState(user.attendanceCount || 0);
+  const [setUser] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [recentAttendance, setRecentAttendance] = useState<Array<{
     date: string;
@@ -80,6 +81,33 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
     fetchToken();
     fetchTodaysWorkout();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "User not authenticated");
+        return;
+      }
+
+      const response = await fetch(
+        "http://192.168.1.10:5000/api/users/dashboard",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        setUser(data.user);
+      } else {
+        Alert.alert("Error", "Failed to fetch user data");
+      }
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+      Alert.alert("Error", "Something went wrong");
+    }
+  };
 
   // Fetch today's workout
   // const fetchTodaysWorkout = async () => {
@@ -188,38 +216,74 @@ const fetchTodaysWorkout = async () => {
   }
 };
 
-  const handleQuickCheckIn = async (classType: string) => {
-    if (!authToken) {
-      Alert.alert('Error', 'Authentication token not found. Please log in again.');
-      return;
-    }
+  // const handleQuickCheckIn = async (classType: string) => {
+  //   if (!authToken) {
+  //     Alert.alert('Error', 'Authentication token not found. Please log in again.');
+  //     return;
+  //   }
 
+  //   try {
+  //     const response = await fetch(`http://192.168.1.10:5000/api/users/attendance`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${authToken}`,
+  //       },
+  //       body: JSON.stringify({ classType }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (response.ok && data.success) {
+  //       setAttendanceCount(data.user.attendanceCount);
+  //       setRecentAttendance(data.user.attendance.slice(-3).reverse());
+        
+  //       Alert.alert(
+  //         'Success!', 
+  //         `Checked in for ${classType} class.`
+  //       );
+  //     } else {
+  //       Alert.alert('Error', data.message || 'Failed to mark attendance.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Attendance API error:', error);
+  //     Alert.alert('Error', 'Network error. Please check your connection.');
+  //   }
+  // };
+    // Quick Check-in (Attendance by date)
+  const handleQuickCheckIn = async () => {
     try {
-      const response = await fetch(`http://192.168.1.10:5000/api/users/attendance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ classType }),
-      });
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "User not authenticated");
+        return;
+      }
+
+      const response = await fetch(
+        "http://192.168.1.10:5000/api/users/attendance",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            date: new Date().toISOString(), // ✅ matches backend
+          }),
+        }
+      );
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setAttendanceCount(data.user.attendanceCount);
-        setRecentAttendance(data.user.attendance.slice(-3).reverse());
-        
-        Alert.alert(
-          'Success!', 
-          `Checked in for ${classType} class.`
-        );
+      if (data.success) {
+        Alert.alert("Success", "Attendance marked successfully!");
+        fetchUserData(); // refresh dashboard
       } else {
-        Alert.alert('Error', data.message || 'Failed to mark attendance.');
+        Alert.alert("Error", data.message || "Failed to mark attendance");
       }
     } catch (error) {
-      console.error('Attendance API error:', error);
-      Alert.alert('Error', 'Network error. Please check your connection.');
+      console.error("Quick check-in error:", error);
+      Alert.alert("Error", "Failed to mark attendance");
     }
   };
 
@@ -342,7 +406,7 @@ const fetchTodaysWorkout = async () => {
                   `${todaysWorkout.description}\n\nDuration: ${todaysWorkout.estimatedDuration}\nExercises: ${todaysWorkout.exerciseCount}\nCalories: ~${todaysWorkout.totalCalories}`,
                   [
                     { text: 'View Details', onPress: () => {} },
-                    { text: 'Start Workout', onPress: () => handleQuickCheckIn(todaysWorkout.type) }
+                    { text: 'Start Workout', onPress: () => handleQuickCheckIn() }
                   ]
                 )}
               >

@@ -5,17 +5,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  // FlatList,
-  // Alert,
   RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AttendanceRecord {
   date: string;
-  classType: string;
+  dayName: string;
 }
 
 interface User {
@@ -31,30 +28,65 @@ interface AttendanceRecordScreenProps {
 }
 
 const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user }) => {
-  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>(
-    user.attendance || []
-  );
+  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
 
-  const filters = ['All', 'Cardio', 'Strength', 'Flexibility', 'Balance'];
+  const filters = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Function to clear app cache
+  const clearAppCache = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log('Cache cleared successfully');
+      // You'll need to log in again after this
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchToken = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
         setAuthToken(token);
+        if (token) {
+          // Always fetch fresh data, ignore initial props
+          fetchAttendanceDataWithToken(token);
+        }
       } catch (error) {
         console.error('Failed to fetch auth token from storage:', error);
       }
     };
     fetchToken();
   }, []);
+
+  const fetchAttendanceDataWithToken = async (token: string) => {
+    try {
+      const response = await fetch(`http://192.168.1.10:5000/api/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      console.log('=== FULL API RESPONSE ===');
+      console.log(JSON.stringify(data, null, 2));
+      console.log('=== ATTENDANCE ARRAY ===');
+      console.log(JSON.stringify(data.user?.attendance, null, 2));
+      
+      if (response.ok && data.success) {
+        setAttendanceData(data.user.attendance || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch attendance data:', error);
+    }
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -83,7 +115,7 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
   };
 
   const filteredAttendance = attendanceData.filter(record => 
-    selectedFilter === 'All' || record.classType === selectedFilter
+    selectedFilter === 'All' || record.dayName === selectedFilter
   );
 
   const getAttendanceStats = () => {
@@ -103,18 +135,44 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       return recordDate.getMonth() === lastMonth && recordDate.getFullYear() === lastMonthYear;
     }).length;
 
-    const classTypeCounts = attendanceData.reduce((acc, record) => {
-      acc[record.classType] = (acc[record.classType] || 0) + 1;
+    // Count attendance by day of week
+    const dayNameCounts = attendanceData.reduce((acc, record) => {
+      // Handle both old (classType) and new (dayName) data structures
+      const day = record.dayName || new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' });
+      acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {} as { [key: string]: number });
 
-    const mostFrequent = Object.entries(classTypeCounts).sort(([,a], [,b]) => b - a)[0];
+    const mostFrequentDay = Object.entries(dayNameCounts).sort(([,a], [,b]) => b - a)[0];
+
+    // Calculate streak (consecutive days of attendance)
+    const sortedAttendance = [...attendanceData]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    let currentStreak = 0;
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let i = 0; i < sortedAttendance.length; i++) {
+      const recordDate = new Date(sortedAttendance[i].date);
+      recordDate.setHours(0, 0, 0, 0);
+      
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - i);
+      
+      if (recordDate.getTime() === expectedDate.getTime()) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
 
     return {
       thisMonth: thisMonthCount,
       lastMonth: lastMonthCount,
       total: attendanceData.length,
-      mostFrequent: mostFrequent ? mostFrequent[0] : 'None'
+      mostFrequentDay: mostFrequentDay ? mostFrequentDay[0] : 'None',
+      currentStreak
     };
   };
 
@@ -146,24 +204,30 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
     });
   };
 
-  const getWorkoutIcon = (classType: string) => {
-    switch (classType) {
-      case 'Cardio': return 'walk';
-      case 'Strength': return 'barbell';
-      case 'Flexibility': return 'accessibility';
-      case 'Balance': return 'scale';
-      default: return 'fitness';
-    }
+  const getDayIcon = (dayName: string): any => {
+    const dayIcons: { [key: string]: string } = {
+      'Monday': 'calendar',
+      'Tuesday': 'calendar',
+      'Wednesday': 'calendar',
+      'Thursday': 'calendar',
+      'Friday': 'calendar',
+      'Saturday': 'calendar-outline',
+      'Sunday': 'calendar-outline'
+    };
+    return dayIcons[dayName] || 'calendar';
   };
 
-  const getWorkoutColor = (classType: string) => {
-    switch (classType) {
-      case 'Cardio': return '#ef4444';
-      case 'Strength': return '#2563eb';
-      case 'Flexibility': return '#10b981';
-      case 'Balance': return '#f59e0b';
-      default: return '#6b7280';
-    }
+  const getDayColor = (dayName: string) => {
+    const dayColors: { [key: string]: string } = {
+      'Monday': '#3b82f6',    // Blue
+      'Tuesday': '#10b981',   // Green
+      'Wednesday': '#f59e0b', // Amber
+      'Thursday': '#ef4444',  // Red
+      'Friday': '#8b5cf6',    // Purple
+      'Saturday': '#06b6d4',  // Cyan
+      'Sunday': '#f97316'     // Orange
+    };
+    return dayColors[dayName] || '#6b7280';
   };
 
   const groupAttendanceByMonth = () => {
@@ -211,18 +275,18 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
   const renderAttendanceItem = ({ item }: { item: AttendanceRecord }) => (
     <View style={styles.attendanceItem}>
       <View style={[
-        styles.workoutIconContainer,
-        { backgroundColor: getWorkoutColor(item.classType) + '15' }
+        styles.dayIconContainer,
+        { backgroundColor: getDayColor(item.dayName) + '15' }
       ]}>
         <Ionicons 
-          name={getWorkoutIcon(item.classType)} 
+          name={getDayIcon(item.dayName)} 
           size={24} 
-          color={getWorkoutColor(item.classType)} 
+          color={getDayColor(item.dayName)} 
         />
       </View>
       <View style={styles.attendanceContent}>
-        <Text style={styles.workoutType}>{item.classType}</Text>
-        <Text style={styles.attendanceTime}>
+        <Text style={styles.dayName}>{item.dayName}</Text>
+        <Text style={styles.attendanceDate}>
           {formatDate(item.date)} • {formatTime(item.date)}
         </Text>
       </View>
@@ -242,33 +306,46 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Attendance Record</Text>
-        <Text style={styles.subtitle}>Track your fitness journey</Text>
+        <Text style={styles.subtitle}>Track your daily gym visits</Text>
       </View>
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Ionicons name="barbell" size={24} color="#2563eb" />
+          <Ionicons name="calendar" size={24} color="#2563eb" />
           <Text style={styles.statNumber}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Sessions</Text>
+          <Text style={styles.statLabel}>Total Days</Text>
         </View>
         
         <View style={styles.statCard}>
-          <Ionicons name="calendar" size={24} color="#10b981" />
+          <Ionicons name="calendar-outline" size={24} color="#10b981" />
           <Text style={styles.statNumber}>{stats.thisMonth}</Text>
           <Text style={styles.statLabel}>This Month</Text>
         </View>
 
         <View style={styles.statCard}>
-          <Ionicons name="trending-up" size={24} color="#f59e0b" />
-          <Text style={styles.statNumber}>{stats.mostFrequent}</Text>
-          <Text style={styles.statLabel}>Most Frequent</Text>
+          <Ionicons name="flame" size={24} color="#f59e0b" />
+          <Text style={styles.statNumber}>{stats.currentStreak}</Text>
+          <Text style={styles.statLabel}>Day Streak</Text>
         </View>
       </View>
 
+      {/* Most Frequent Day Card */}
+      {stats.mostFrequentDay !== 'None' && (
+        <View style={styles.section}>
+          <View style={styles.frequentDayCard}>
+            <View style={styles.frequentDayHeader}>
+              <Ionicons name="trophy" size={24} color="#f59e0b" />
+              <Text style={styles.frequentDayTitle}>Most Active Day</Text>
+            </View>
+            <Text style={styles.frequentDayName}>{stats.mostFrequentDay}</Text>
+          </View>
+        </View>
+      )}
+
       {/* Filter Buttons */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Filter by Workout Type</Text>
+        <Text style={styles.sectionTitle}>Filter by Day</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -282,10 +359,10 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {selectedFilter === 'All' ? 'All Sessions' : `${selectedFilter} Sessions`}
+            {selectedFilter === 'All' ? 'All Days' : `${selectedFilter} Sessions`}
           </Text>
           <Text style={styles.resultCount}>
-            {filteredAttendance.length} sessions
+            {filteredAttendance.length} days
           </Text>
         </View>
 
@@ -312,8 +389,8 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
             <Text style={styles.emptyStateTitle}>No Records Found</Text>
             <Text style={styles.emptyStateText}>
               {selectedFilter === 'All' 
-                ? 'Start working out to see your attendance records here!'
-                : `No ${selectedFilter.toLowerCase()} sessions found. Try a different filter.`
+                ? 'Start visiting the gym to see your attendance records here!'
+                : `No ${selectedFilter} visits found. Try a different filter.`
               }
             </Text>
           </View>
@@ -375,6 +452,34 @@ const styles = StyleSheet.create({
     margin: 20,
     marginTop: 0,
   },
+  frequentDayCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+    marginBottom: 20,
+  },
+  frequentDayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  frequentDayTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginLeft: 8,
+  },
+  frequentDayName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -429,6 +534,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   attendanceItem: {
     flexDirection: 'row',
@@ -437,7 +547,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  workoutIconContainer: {
+  dayIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -448,12 +558,12 @@ const styles = StyleSheet.create({
   attendanceContent: {
     flex: 1,
   },
-  workoutType: {
+  dayName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
   },
-  attendanceTime: {
+  attendanceDate: {
     fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
@@ -467,6 +577,11 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
     marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   emptyStateTitle: {
     fontSize: 18,

@@ -48,6 +48,12 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper function to get day name from date
+const getDayName = (date) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[date.getDay()];
+};
+
 // Register a new user
 router.post("/register", async (req, res) => {
   console.log('Registration attempt:', { email: req.body.email });
@@ -55,7 +61,7 @@ router.post("/register", async (req, res) => {
   try {
     const { name, email, password, membershipType } = req.body;
 
-    // Validate required fields - removed workoutType
+    // Validate required fields
     if (!name || !email || !password || !membershipType) {
       return res.status(400).json({ 
         success: false, 
@@ -80,7 +86,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Create new user - removed workoutType
+    // Create new user
     const user = new User({
       name,
       email: email.toLowerCase(),
@@ -255,32 +261,24 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-// Mark attendance (protected route)
+// Mark attendance for a specific date (protected route)
 router.post("/attendance", authenticateToken, async (req, res) => {
   try {
-    const { classType } = req.body;
+    const { date } = req.body;
     
-    if (!classType) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Class type is required" 
-      });
-    }
+    // If no date provided, use current date
+    const attendanceDate = date ? new Date(date) : new Date();
+    const dayName = getDayName(attendanceDate);
+    
+    // Set time to start of day to avoid duplicate entries for same day
+    const startOfDay = new Date(attendanceDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(attendanceDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      {
-        $inc: { attendanceCount: 1 },
-        $push: { 
-          attendance: { 
-            date: new Date(), 
-            classType 
-          } 
-        },
-      },
-      { new: true }
-    );
-
+    // Check if attendance already marked for this day
+    const user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ 
         success: false, 
@@ -288,12 +286,38 @@ router.post("/attendance", authenticateToken, async (req, res) => {
       });
     }
 
-    console.log(`Attendance marked for ${user.name}: ${classType}`);
+    const existingAttendance = user.attendance?.find(record => {
+      const recordDate = new Date(record.date);
+      return recordDate >= startOfDay && recordDate <= endOfDay;
+    });
+
+    if (existingAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: `Attendance already marked for ${dayName}`
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        $inc: { attendanceCount: 1 },
+        $push: { 
+          attendance: { 
+            date: attendanceDate,
+            dayName: dayName
+          } 
+        },
+      },
+      { new: true }
+    );
+
+    console.log(`Attendance marked for ${updatedUser.name}: ${dayName} - ${attendanceDate.toDateString()}`);
 
     res.json({
       success: true,
-      message: "Attendance marked successfully",
-      user,
+      message: `Attendance marked for ${dayName}`,
+      user: updatedUser,
     });
 
   } catch (error) {
@@ -305,7 +329,120 @@ router.post("/attendance", authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (protected route) - removed workoutType
+// Mark attendance for today (protected route)
+router.post("/attendance/today", authenticateToken, async (req, res) => {
+  try {
+    const today = new Date();
+    const dayName = getDayName(today);
+    
+    // Set time to start of day to avoid duplicate entries for same day
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Check if attendance already marked for today
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    const existingAttendance = user.attendance?.find(record => {
+      const recordDate = new Date(record.date);
+      return recordDate >= startOfDay && recordDate <= endOfDay;
+    });
+
+    if (existingAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: `Attendance already marked for today (${dayName})`
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        $inc: { attendanceCount: 1 },
+        $push: { 
+          attendance: { 
+            date: today,
+            dayName: dayName
+          } 
+        },
+      },
+      { new: true }
+    );
+
+    console.log(`Attendance marked for ${updatedUser.name}: ${dayName} - ${today.toDateString()}`);
+
+    res.json({
+      success: true,
+      message: `Attendance marked for today (${dayName})`,
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error("Attendance error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to mark attendance" 
+    });
+  }
+});
+
+// Get attendance for a specific date range (protected route)
+router.get("/attendance", authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate, dayName } = req.query;
+    
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    let filteredAttendance = user.attendance || [];
+
+    // Filter by date range if provided
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      filteredAttendance = filteredAttendance.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= start && recordDate <= end;
+      });
+    }
+
+    // Filter by day name if provided
+    if (dayName) {
+      filteredAttendance = filteredAttendance.filter(record => 
+        record.dayName?.toLowerCase() === dayName.toLowerCase()
+      );
+    }
+
+    res.json({
+      success: true,
+      attendance: filteredAttendance,
+      count: filteredAttendance.length
+    });
+
+  } catch (error) {
+    console.error("Get attendance error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch attendance" 
+    });
+  }
+});
+
+// Update user profile (protected route)
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const { name, membershipType } = req.body;

@@ -10,8 +10,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
+
+interface AttendanceRecord {
+  date: string;
+  dayName: string;
+}
 
 interface User {
   _id?: string;
@@ -21,10 +25,7 @@ interface User {
   workoutType: string;
   attendanceCount?: number;
   joinDate?: string;
-  attendance?: Array<{
-    date: string;
-    classType: string;
-  }>;
+  attendance?: AttendanceRecord[];
 }
 
 interface Exercise {
@@ -56,50 +57,50 @@ interface DashboardScreenProps {
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => {
-  const [attendanceCount, setAttendanceCount] = useState(user.attendanceCount || 0);
-  const [setUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User>(user);
   const [refreshing, setRefreshing] = useState(false);
-  const [recentAttendance, setRecentAttendance] = useState<Array<{
-    date: string;
-    classType: string;
-  }>>(user.attendance ? user.attendance.slice(0, 3) : []);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [todaysWorkout, setTodaysWorkout] = useState<DayWorkout | null>(null);
   const [loadingWorkout, setLoadingWorkout] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
 
-  const workoutTypes = ['Cardio', 'Strength', 'Flexibility', 'Balance'];
-  
   useEffect(() => {
-    const fetchToken = async () => {
+    const initializeData = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
         setAuthToken(token);
+        if (token) {
+          await fetchUserData(token);
+        }
       } catch (error) {
-        console.error('Failed to fetch auth token from storage:', error);
+        console.error('Failed to initialize data:', error);
       }
     };
-    fetchToken();
+    
+    initializeData();
     fetchTodaysWorkout();
   }, []);
 
-  const fetchUserData = async () => {
+  const fetchUserData = async (token?: string) => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
+      const authTokenToUse = token || authToken;
+      if (!authTokenToUse) {
         Alert.alert("Error", "User not authenticated");
         return;
       }
 
       const response = await fetch(
-        "http://192.168.1.10:5000/api/users/dashboard",
+        "http://192.168.1.10:5000/api/users/profile",
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 
+            Authorization: `Bearer ${authTokenToUse}` 
+          },
         }
       );
 
       const data = await response.json();
       if (data.success) {
-        setUser(data.user);
+        setCurrentUser(data.user);
       } else {
         Alert.alert("Error", "Failed to fetch user data");
       }
@@ -109,199 +110,135 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
     }
   };
 
-  // Fetch today's workout
-  // const fetchTodaysWorkout = async () => {
-  //   setLoadingWorkout(true);
-  //   try {
-  //     const response = await fetch(`http://192.168.1.10:5000/api/exercises/today`);
-  //     const data = await response.json();
-      
-  //     if (data.success && !data.isRestDay) {
-  //       setTodaysWorkout(data.workout);
-  //     } else if (data.isRestDay) {
-  //       // Handle rest day
-  //       setTodaysWorkout(null);
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to fetch today\'s workout:', error);
-  //     // Set fallback workout for demo purposes
-  //     setTodaysWorkout({
-  //       name: 'Upper Body + Abs',
-  //       type: 'Strength',
-  //       description: 'Focus on chest, back, shoulders, and core',
-  //       exercises: [
-  //         {
-  //           id: '1',
-  //           name: 'Push-Ups',
-  //           sets: 3,
-  //           reps: '10-15',
-  //           restTime: '60s',
-  //           difficulty: 'Beginner',
-  //           equipment: 'Bodyweight',
-  //           instructions: 'Start in plank position, lower chest to ground, then push back up.',
-  //           muscleGroups: ['Chest', 'Triceps', 'Shoulders']
-  //         },
-  //         {
-  //           id: '2',
-  //           name: 'Plank',
-  //           sets: 3,
-  //           reps: '30s hold',
-  //           restTime: '30s',
-  //           difficulty: 'Beginner',
-  //           equipment: 'Bodyweight',
-  //           instructions: 'Hold plank position with body in straight line.',
-  //           muscleGroups: ['Core', 'Abs']
-  //         }
-  //       ],
-  //       totalCalories: 200,
-  //       estimatedDuration: '25 min',
-  //       exerciseCount: 2
-  //     });
-  //   } finally {
-  //     setLoadingWorkout(false);
-  //   }
-  // };
-const fetchTodaysWorkout = async () => {
-  setLoadingWorkout(true);
-  try {
-    const response = await fetch('http://192.168.1.10:5000/api/exercises/weekly-schedule');
-    const data = await response.json();
-    
-    if (data.success) {
-      const today = new Date().toLocaleString('en-US', { weekday: 'long' });
-      const todaysWorkout = data.schedule[today];
-      if (todaysWorkout && todaysWorkout.type !== 'Rest') {
-        setTodaysWorkout(todaysWorkout);
-      } else {
-        setTodaysWorkout(null); // Rest day
-      }
-    }
-  } catch (error) {
-    console.error('Failed to fetch today\'s workout:', error);
-    // Fallback to demo workout
-    setTodaysWorkout({
-      name: 'Upper Body + Abs',
-      type: 'Strength',
-      description: 'Focus on chest, back, shoulders, and core',
-      exercises: [
-        {
-          id: '1',
-          name: 'Push-Ups',
-          sets: 3,
-          reps: '10-15',
-          restTime: '60s',
-          difficulty: 'Beginner',
-          equipment: 'Bodyweight',
-          instructions: 'Start in plank position, lower chest to ground, then push back up.',
-          muscleGroups: ['Chest', 'Triceps', 'Shoulders']
-        },
-        {
-          id: '2',
-          name: 'Plank',
-          sets: 3,
-          reps: '30s hold',
-          restTime: '30s',
-          difficulty: 'Beginner',
-          equipment: 'Bodyweight',
-          instructions: 'Hold plank position with body in straight line.',
-          muscleGroups: ['Core', 'Abs']
-        }
-      ],
-      totalCalories: 200,
-      estimatedDuration: '25 min',
-      exerciseCount: 2
-    });
-  } finally {
-    setLoadingWorkout(false);
-  }
-};
-
-  // const handleQuickCheckIn = async (classType: string) => {
-  //   if (!authToken) {
-  //     Alert.alert('Error', 'Authentication token not found. Please log in again.');
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await fetch(`http://192.168.1.10:5000/api/users/attendance`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${authToken}`,
-  //       },
-  //       body: JSON.stringify({ classType }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (response.ok && data.success) {
-  //       setAttendanceCount(data.user.attendanceCount);
-  //       setRecentAttendance(data.user.attendance.slice(-3).reverse());
-        
-  //       Alert.alert(
-  //         'Success!', 
-  //         `Checked in for ${classType} class.`
-  //       );
-  //     } else {
-  //       Alert.alert('Error', data.message || 'Failed to mark attendance.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Attendance API error:', error);
-  //     Alert.alert('Error', 'Network error. Please check your connection.');
-  //   }
-  // };
-    // Quick Check-in (Attendance by date)
-  const handleQuickCheckIn = async () => {
+  const fetchTodaysWorkout = async () => {
+    setLoadingWorkout(true);
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
+      const response = await fetch('http://192.168.1.10:5000/api/exercises/weekly-schedule');
+      const data = await response.json();
+      
+      if (data.success) {
+        const today = new Date().toLocaleString('en-US', { weekday: 'long' });
+        const todaysWorkout = data.schedule[today];
+        if (todaysWorkout && todaysWorkout.type !== 'Rest') {
+          setTodaysWorkout(todaysWorkout);
+        } else {
+          setTodaysWorkout(null); // Rest day
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch today\'s workout:', error);
+      // Fallback to demo workout
+      setTodaysWorkout({
+        name: 'Upper Body + Abs',
+        type: 'Strength',
+        description: 'Focus on chest, back, shoulders, and core',
+        exercises: [
+          {
+            id: '1',
+            name: 'Push-Ups',
+            sets: 3,
+            reps: '10-15',
+            restTime: '60s',
+            difficulty: 'Beginner',
+            equipment: 'Bodyweight',
+            instructions: 'Start in plank position, lower chest to ground, then push back up.',
+            muscleGroups: ['Chest', 'Triceps', 'Shoulders']
+          },
+          {
+            id: '2',
+            name: 'Plank',
+            sets: 3,
+            reps: '30s hold',
+            restTime: '30s',
+            difficulty: 'Beginner',
+            equipment: 'Bodyweight',
+            instructions: 'Hold plank position with body in straight line.',
+            muscleGroups: ['Core', 'Abs']
+          }
+        ],
+        totalCalories: 200,
+        estimatedDuration: '25 min',
+        exerciseCount: 2
+      });
+    } finally {
+      setLoadingWorkout(false);
+    }
+  };
+
+  // Updated Quick Check-in function to match backend API
+  const handleQuickCheckIn = async () => {
+    if (isCheckingIn) return; // Prevent double clicks
+    
+    setIsCheckingIn(true);
+    try {
+      if (!authToken) {
         Alert.alert("Error", "User not authenticated");
         return;
       }
 
       const response = await fetch(
-        "http://192.168.1.10:5000/api/users/attendance",
+        "http://192.168.1.10:5000/api/users/attendance/today",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
           },
-          body: JSON.stringify({
-            date: new Date().toISOString(), // ✅ matches backend
-          }),
         }
       );
 
       const data = await response.json();
 
       if (data.success) {
-        Alert.alert("Success", "Attendance marked successfully!");
-        fetchUserData(); // refresh dashboard
+        // Update local user state with new data
+        setCurrentUser(data.user);
+        Alert.alert("Success!", data.message);
       } else {
-        Alert.alert("Error", data.message || "Failed to mark attendance");
+        Alert.alert("Info", data.message || "Failed to mark attendance");
       }
     } catch (error) {
       console.error("Quick check-in error:", error);
-      Alert.alert("Error", "Failed to mark attendance");
+      Alert.alert("Error", "Failed to mark attendance. Please check your connection.");
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    fetchTodaysWorkout();
-    setTimeout(() => {
+    Promise.all([
+      fetchUserData(),
+      fetchTodaysWorkout()
+    ]).finally(() => {
       setRefreshing(false);
-    }, 2000);
-  }, []);
+    });
+  }, [authToken]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      });
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
     });
   };
 
@@ -331,6 +268,31 @@ const fetchTodaysWorkout = async () => {
     }
   };
 
+  // Get this month's attendance count
+  const getThisMonthAttendance = () => {
+    if (!currentUser.attendance) return 0;
+    
+    const thisMonth = new Date().getMonth();
+    const thisYear = new Date().getFullYear();
+    
+    return currentUser.attendance.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate.getMonth() === thisMonth && recordDate.getFullYear() === thisYear;
+    }).length;
+  };
+
+  // Get recent attendance (last 3 records)
+  const getRecentAttendance = () => {
+    if (!currentUser.attendance || currentUser.attendance.length === 0) return [];
+    
+    return [...currentUser.attendance]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+  };
+
+  const recentAttendance = getRecentAttendance();
+  const thisMonthCount = getThisMonthAttendance();
+
   return (
     <ScrollView 
       style={styles.container}
@@ -342,7 +304,7 @@ const fetchTodaysWorkout = async () => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.greeting}>{getGreeting()},</Text>
-          <Text style={styles.userName}>{user.name}!</Text>
+          <Text style={styles.userName}>{currentUser.name}!</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
           <Ionicons name="person-circle" size={32} color="#2563eb" />
@@ -354,13 +316,13 @@ const fetchTodaysWorkout = async () => {
         <View style={styles.statCard}>
           <Ionicons name="barbell" size={24} color="#2563eb" />
           <Text style={styles.statLabel}>Total Workouts</Text>
-          <Text style={styles.statNumber}>{attendanceCount}</Text>
+          <Text style={styles.statNumber}>{currentUser.attendanceCount || 0}</Text>
         </View>
         
         <View style={styles.statCard}>
           <Ionicons name="calendar" size={24} color="#10b981" />
           <Text style={styles.statLabel}>This Month</Text>
-          <Text style={styles.statNumber}>12</Text>
+          <Text style={styles.statNumber}>{thisMonthCount}</Text>
         </View>
 
         <View style={[styles.statCard, styles.membershipCard]}>
@@ -368,9 +330,9 @@ const fetchTodaysWorkout = async () => {
           <Text style={styles.statLabel}>Membership Type</Text>
           <View style={[
             styles.membershipBadge, 
-            { backgroundColor: getMembershipColor(user.membershipType) }
+            { backgroundColor: getMembershipColor(currentUser.membershipType) }
           ]}>
-            <Text style={styles.membershipText}>{user.membershipType}</Text>
+            <Text style={styles.membershipText}>{currentUser.membershipType}</Text>
           </View>
         </View>
       </View>
@@ -400,18 +362,32 @@ const fetchTodaysWorkout = async () => {
                 <Text style={styles.workoutName}>{todaysWorkout.name}</Text>
               </View>
               <TouchableOpacity 
-                style={styles.startWorkoutButton}
+                style={[
+                  styles.startWorkoutButton,
+                  isCheckingIn && styles.disabledButton
+                ]}
                 onPress={() => Alert.alert(
                   todaysWorkout.name,
                   `${todaysWorkout.description}\n\nDuration: ${todaysWorkout.estimatedDuration}\nExercises: ${todaysWorkout.exerciseCount}\nCalories: ~${todaysWorkout.totalCalories}`,
                   [
                     { text: 'View Details', onPress: () => {} },
-                    { text: 'Start Workout', onPress: () => handleQuickCheckIn() }
+                    { 
+                      text: isCheckingIn ? 'Checking in...' : 'Start & Check-in', 
+                      onPress: () => handleQuickCheckIn(),
+                      style: isCheckingIn ? 'default' : 'default'
+                    }
                   ]
                 )}
+                disabled={isCheckingIn}
               >
-                <Ionicons name="play" size={16} color="white" />
-                <Text style={styles.startWorkoutText}>Start</Text>
+                {isCheckingIn ? (
+                  <ActivityIndicator size={16} color="white" />
+                ) : (
+                  <Ionicons name="play" size={16} color="white" />
+                )}
+                <Text style={styles.startWorkoutText}>
+                  {isCheckingIn ? 'Checking in...' : 'Start'}
+                </Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.workoutDescription}>{todaysWorkout.description}</Text>
@@ -437,34 +413,25 @@ const fetchTodaysWorkout = async () => {
               <Text style={styles.restDayTitle}>Today is Rest Day</Text>
             </View>
             <Text style={styles.restDayText}>Take time to recover and prepare for tomorrow&apos;s workout!</Text>
-          </View>
-        )}
-
-        {/* Quick Check-in Buttons */}
-        {/* <View style={styles.quickActions}>
-          {workoutTypes.map((type) => (
-            <TouchableOpacity
-              key={type}
+            <TouchableOpacity 
               style={[
-                styles.actionCard,
-                user.workoutType === type && styles.preferredAction
+                styles.restDayButton,
+                isCheckingIn && styles.disabledButton
               ]}
-              onPress={() => handleQuickCheckIn(type)}
+              onPress={handleQuickCheckIn}
+              disabled={isCheckingIn}
             >
-              <Ionicons 
-                name={getWorkoutIcon(type)} 
-                size={24} 
-                color={user.workoutType === type ? '#2563eb' : '#6b7280'} 
-              />
-              <Text style={[
-                styles.actionText,
-                user.workoutType === type && styles.preferredActionText
-              ]}>
-                {type}
+              {isCheckingIn ? (
+                <ActivityIndicator size={16} color="#059669" />
+              ) : (
+                <Ionicons name="checkmark" size={16} color="#059669" />
+              )}
+              <Text style={styles.restDayButtonText}>
+                {isCheckingIn ? 'Checking in...' : 'Check-in Anyway'}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View> */}
+          </View>
+        )}
       </View>
 
       {/* Recent Activity */}
@@ -479,14 +446,14 @@ const fetchTodaysWorkout = async () => {
         {recentAttendance.length > 0 ? (
           <View style={styles.activityContainer}>
             {recentAttendance.map((activity, index) => (
-              <View key={index} style={styles.activityItem}>
+              <View key={`${activity.date}-${index}`} style={styles.activityItem}>
                 <View style={styles.activityIcon}>
                   <Ionicons name="checkmark-circle" size={20} color="#10b981" />
                 </View>
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityType}>{activity.classType}</Text>
+                  <Text style={styles.activityType}>{activity.dayName} Workout</Text>
                   <Text style={styles.activityDate}>
-                    {formatDate(activity.date)}
+                    {formatDate(activity.date)} • {formatTime(activity.date)}
                   </Text>
                 </View>
               </View>
@@ -582,7 +549,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
   },
-    statItem: {
+  statItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -601,7 +568,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 15,
     fontWeight: '600',
-    
   },
   section: {
     margin: 20,
@@ -622,12 +588,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2563eb',
     fontWeight: '600',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 12,
   },
   workoutLoadingCard: {
     backgroundColor: 'white',
@@ -697,6 +657,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
+  disabledButton: {
+    backgroundColor: '#9ca3af',
+  },
   startWorkoutText: {
     color: 'white',
     fontSize: 14,
@@ -735,40 +698,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#047857',
     lineHeight: 20,
+    marginBottom: 12,
   },
-  actionCard: {
-    flex: 1,
-    minWidth: '22%',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
+  restDayButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#059669',
   },
-  preferredAction: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
-  },
-  actionText: {
-    fontSize: 12,
+  restDayButtonText: {
+    color: '#059669',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  preferredActionText: {
-    color: '#2563eb',
   },
   activityContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
   activityIcon: {
     marginRight: 12,
@@ -791,6 +754,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 40,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   emptyStateText: {
     fontSize: 16,
@@ -808,6 +776,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   goalHeader: {
     flexDirection: 'row',

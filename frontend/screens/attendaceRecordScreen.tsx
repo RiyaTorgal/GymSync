@@ -6,9 +6,34 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import Svg, { Circle, Text as SvgText, Polyline } from 'react-native-svg';
+
+const { width: screenWidth } = Dimensions.get('window');
+const chartConfig = {
+  backgroundGradientFrom: '#ffffff',
+  backgroundGradientFromOpacity: 0,
+  backgroundGradientTo: '#ffffff',
+  backgroundGradientToOpacity: 0,
+  color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+  strokeWidth: 2,
+  barPercentage: 0.7,
+  useShadowColorFromDataset: false,
+  decimalPlaces: 0,
+  propsForDots: {
+    r: "4",
+    strokeWidth: "2",
+    stroke: "#2563eb"
+  },
+  propsForLabels: {
+    fontSize: 12,
+    fontFamily: "System"
+  }
+};
 
 interface AttendanceRecord {
   date: string;
@@ -27,11 +52,163 @@ interface AttendanceRecordScreenProps {
   user: User;
 }
 
+// Calendar Heatmap Component
+const CalendarHeatmap: React.FC<{ data: AttendanceRecord[] }> = ({ data }) => {
+  const getHeatmapData = () => {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+    
+    const attendanceMap = data.reduce((acc, record) => {
+      const date = new Date(record.date).toDateString();
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    const weeks = [];
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= today) {
+      const weekData = [];
+      for (let i = 0; i < 7; i++) {
+        const dateStr = currentDate.toDateString();
+        const count = attendanceMap[dateStr] || 0;
+        weekData.push({
+          date: new Date(currentDate),
+          count,
+          intensity: count > 0 ? Math.min(count / 2, 1) : 0
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      weeks.push(weekData);
+      if (currentDate > today) break;
+    }
+    
+    return weeks.slice(-12);
+  };
+
+  const weeks = getHeatmapData();
+
+  return (
+    <View style={styles.heatmapContainer}>
+      <Text style={styles.chartTitle}>6-Month Activity</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.heatmapGrid}>
+          {weeks.map((week, weekIndex) => (
+            <View key={weekIndex} style={styles.heatmapWeek}>
+              {week.map((day, dayIndex) => (
+                <View
+                  key={dayIndex}
+                  style={[
+                    styles.heatmapDay,
+                    {
+                      backgroundColor: day.intensity > 0 
+                        ? `rgba(37, 99, 235, ${0.2 + day.intensity * 0.8})`
+                        : '#f3f4f6'
+                    }
+                  ]}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+// Circular Progress Component
+const CircularProgress: React.FC<{
+  progress: number;
+  size: number;
+  strokeWidth: number;
+  color: string;
+  backgroundColor: string;
+  text: string;
+  subtext: string;
+}> = ({ progress, size, strokeWidth, color, backgroundColor, text, subtext }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <View style={styles.circularProgressContainer}>
+      <Svg width={size} height={size}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+        <SvgText
+          x={size / 2}
+          y={size / 2 - 8}
+          textAnchor="middle"
+          fontSize="18"
+          fontWeight="bold"
+          fill="#1f2937"
+        >
+          {text}
+        </SvgText>
+        <SvgText
+          x={size / 2}
+          y={size / 2 + 12}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#6b7280"
+        >
+          {subtext}
+        </SvgText>
+      </Svg>
+    </View>
+  );
+};
+
+// Sparkline Component
+const Sparkline: React.FC<{ data: number[]; color: string }> = ({ data, color }) => {
+  if (data.length === 0) return null;
+
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * 60;
+    const y = 20 - ((value - min) / range) * 15;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <Svg width="60" height="20" style={styles.sparkline}>
+      <Polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+      />
+    </Svg>
+  );
+};
+
 const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user }) => {
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
   const [refreshing, setRefreshing] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [showCharts, setShowCharts] = useState(true);
 
   const filters = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const monthNames = [
@@ -39,24 +216,12 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Function to clear app cache
-  const clearAppCache = async () => {
-    try {
-      await AsyncStorage.clear();
-      console.log('Cache cleared successfully');
-      // You'll need to log in again after this
-    } catch (error) {
-      console.error('Failed to clear cache:', error);
-    }
-  };
-
   useEffect(() => {
     const fetchToken = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
         setAuthToken(token);
         if (token) {
-          // Always fetch fresh data, ignore initial props
           fetchAttendanceDataWithToken(token);
         }
       } catch (error) {
@@ -75,11 +240,6 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       });
 
       const data = await response.json();
-      console.log('=== FULL API RESPONSE ===');
-      console.log(JSON.stringify(data, null, 2));
-      console.log('=== ATTENDANCE ARRAY ===');
-      console.log(JSON.stringify(data.user?.attendance, null, 2));
-      
       if (response.ok && data.success) {
         setAttendanceData(data.user.attendance || []);
       }
@@ -91,18 +251,14 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     fetchAttendanceData();
-  }, []);
+  }, [authToken]);
 
   const fetchAttendanceData = async () => {
     if (!authToken) return;
-
     try {
       const response = await fetch(`http://192.168.1.10:5000/api/users/profile`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
+        headers: { 'Authorization': `Bearer ${authToken}` },
       });
-
       const data = await response.json();
       if (response.ok && data.success) {
         setAttendanceData(data.user.attendance || []);
@@ -114,9 +270,60 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
     }
   };
 
-  const filteredAttendance = attendanceData.filter(record => 
-    selectedFilter === 'All' || record.dayName === selectedFilter
-  );
+  // Chart Data Preparation
+  const getWeeklyPatternData = () => {
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayCount = attendanceData.reduce((acc, record) => {
+      const day = record.dayName;
+      if (day) {
+        acc[day] = (acc[day] || 0) + 1;
+      }
+      return acc;
+    }, {} as { [key: string]: number });
+
+    const data = dayNames.map(day => {
+      const fullDay = day === 'Mon' ? 'Monday' : 
+                     day === 'Tue' ? 'Tuesday' :
+                     day === 'Wed' ? 'Wednesday' :
+                     day === 'Thu' ? 'Thursday' :
+                     day === 'Fri' ? 'Friday' :
+                     day === 'Sat' ? 'Saturday' : 'Sunday';
+      return dayCount[fullDay] || 0;
+    });
+
+    return {
+      labels: dayNames,
+      datasets: [{ data }]
+    };
+  };
+
+  const getMonthlyTrendData = () => {
+    const last6Months = [];
+    const today = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthName = monthNames[date.getMonth()].slice(0, 3);
+      
+      const count = attendanceData.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate.getFullYear() === date.getFullYear() && 
+               recordDate.getMonth() === date.getMonth();
+      }).length;
+      
+      last6Months.push({ month: monthName, count });
+    }
+
+    return {
+      labels: last6Months.map(m => m.month),
+      datasets: [{
+        data: last6Months.map(m => m.count),
+        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+        strokeWidth: 2
+      }],
+      legend: ["Gym Visits"]
+    };
+  };
 
   const getAttendanceStats = () => {
     const thisMonth = new Date().getMonth();
@@ -135,166 +342,37 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
       return recordDate.getMonth() === lastMonth && recordDate.getFullYear() === lastMonthYear;
     }).length;
 
-    // Count attendance by day of week
-    const dayNameCounts = attendanceData.reduce((acc, record) => {
-      // Handle both old (classType) and new (dayName) data structures
-      const day = record.dayName || new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' });
-      acc[day] = (acc[day] || 0) + 1;
-      return acc;
-    }, {} as { [key: string]: number });
+    const monthlyGoal = 20;
+    const monthlyProgress = Math.min((thisMonthCount / monthlyGoal) * 100, 100);
 
-    const mostFrequentDay = Object.entries(dayNameCounts).sort(([,a], [,b]) => b - a)[0];
-
-    // Calculate streak (consecutive days of attendance)
-    const sortedAttendance = [...attendanceData]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    let currentStreak = 0;
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    for (let i = 0; i < sortedAttendance.length; i++) {
-      const recordDate = new Date(sortedAttendance[i].date);
-      recordDate.setHours(0, 0, 0, 0);
-      
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-      
-      if (recordDate.getTime() === expectedDate.getTime()) {
-        currentStreak++;
-      } else {
-        break;
-      }
+    const last6MonthsData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(thisYear, thisMonth - i, 1);
+      const count = attendanceData.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate.getFullYear() === date.getFullYear() && 
+               recordDate.getMonth() === date.getMonth();
+      }).length;
+      last6MonthsData.push(count);
     }
 
     return {
       thisMonth: thisMonthCount,
       lastMonth: lastMonthCount,
       total: attendanceData.length,
-      mostFrequentDay: mostFrequentDay ? mostFrequentDay[0] : 'None',
-      currentStreak
+      monthlyProgress,
+      sparklineData: last6MonthsData,
+      monthlyGoal
     };
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-      });
-    }
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
-
-  const getDayIcon = (dayName: string): any => {
-    const dayIcons: { [key: string]: string } = {
-      'Monday': 'calendar',
-      'Tuesday': 'calendar',
-      'Wednesday': 'calendar',
-      'Thursday': 'calendar',
-      'Friday': 'calendar',
-      'Saturday': 'calendar-outline',
-      'Sunday': 'calendar-outline'
-    };
-    return dayIcons[dayName] || 'calendar';
-  };
-
-  const getDayColor = (dayName: string) => {
-    const dayColors: { [key: string]: string } = {
-      'Monday': '#3b82f6',    // Blue
-      'Tuesday': '#10b981',   // Green
-      'Wednesday': '#f59e0b', // Amber
-      'Thursday': '#ef4444',  // Red
-      'Friday': '#8b5cf6',    // Purple
-      'Saturday': '#06b6d4',  // Cyan
-      'Sunday': '#f97316'     // Orange
-    };
-    return dayColors[dayName] || '#6b7280';
-  };
-
-  const groupAttendanceByMonth = () => {
-    const grouped = filteredAttendance.reduce((acc, record) => {
-      const date = new Date(record.date);
-      const monthYear = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-      
-      if (!acc[monthYear]) {
-        acc[monthYear] = [];
-      }
-      acc[monthYear].push(record);
-      return acc;
-    }, {} as { [key: string]: AttendanceRecord[] });
-
-    return Object.entries(grouped).sort(([a], [b]) => {
-      const [monthA, yearA] = a.split(' ');
-      const [monthB, yearB] = b.split(' ');
-      const dateA = new Date(`${monthA} 1, ${yearA}`);
-      const dateB = new Date(`${monthB} 1, ${yearB}`);
-      return dateB.getTime() - dateA.getTime();
-    });
-  };
+  const filteredAttendance = attendanceData.filter(record => 
+    selectedFilter === 'All' || record.dayName === selectedFilter
+  );
 
   const stats = getAttendanceStats();
-  const groupedAttendance = groupAttendanceByMonth();
-
-  const renderFilterButton = (filter: string) => (
-    <TouchableOpacity
-      key={filter}
-      style={[
-        styles.filterButton,
-        selectedFilter === filter && styles.filterButtonActive
-      ]}
-      onPress={() => setSelectedFilter(filter)}
-    >
-      <Text style={[
-        styles.filterButtonText,
-        selectedFilter === filter && styles.filterButtonTextActive
-      ]}>
-        {filter}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderAttendanceItem = ({ item }: { item: AttendanceRecord }) => (
-    <View style={styles.attendanceItem}>
-      <View style={[
-        styles.dayIconContainer,
-        { backgroundColor: getDayColor(item.dayName) + '15' }
-      ]}>
-        <Ionicons 
-          name={getDayIcon(item.dayName)} 
-          size={24} 
-          color={getDayColor(item.dayName)} 
-        />
-      </View>
-      <View style={styles.attendanceContent}>
-        <Text style={styles.dayName}>{item.dayName}</Text>
-        <Text style={styles.attendanceDate}>
-          {formatDate(item.date)} • {formatTime(item.date)}
-        </Text>
-      </View>
-      <View style={styles.checkIcon}>
-        <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-      </View>
-    </View>
-  );
+  const weeklyData = getWeeklyPatternData();
+  const monthlyTrendData = getMonthlyTrendData();
 
   return (
     <ScrollView 
@@ -305,97 +383,210 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Attendance Record</Text>
-        <Text style={styles.subtitle}>Track your daily gym visits</Text>
-      </View>
-
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Ionicons name="calendar" size={24} color="#2563eb" />
-          <Text style={styles.statNumber}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Days</Text>
+        <View>
+          <Text style={styles.title}>Attendance Analytics</Text>
+          <Text style={styles.subtitle}>Visual insights into your gym habits</Text>
         </View>
-        
-        <View style={styles.statCard}>
-          <Ionicons name="calendar-outline" size={24} color="#10b981" />
-          <Text style={styles.statNumber}>{stats.thisMonth}</Text>
-          <Text style={styles.statLabel}>This Month</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Ionicons name="flame" size={24} color="#f59e0b" />
-          <Text style={styles.statNumber}>{stats.currentStreak}</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
-        </View>
-      </View>
-
-      {/* Most Frequent Day Card */}
-      {stats.mostFrequentDay !== 'None' && (
-        <View style={styles.section}>
-          <View style={styles.frequentDayCard}>
-            <View style={styles.frequentDayHeader}>
-              <Ionicons name="trophy" size={24} color="#f59e0b" />
-              <Text style={styles.frequentDayTitle}>Most Active Day</Text>
-            </View>
-            <Text style={styles.frequentDayName}>{stats.mostFrequentDay}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Filter Buttons */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Filter by Day</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={() => setShowCharts(!showCharts)}
         >
-          {filters.map(renderFilterButton)}
-        </ScrollView>
+          <Ionicons 
+            name={showCharts ? 'list' : 'analytics'} 
+            size={20} 
+            color="#2563eb" 
+          />
+          <Text style={styles.toggleText}>
+            {showCharts ? 'List View' : 'Chart View'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Attendance List */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {selectedFilter === 'All' ? 'All Days' : `${selectedFilter} Sessions`}
-          </Text>
-          <Text style={styles.resultCount}>
-            {filteredAttendance.length} days
-          </Text>
-        </View>
-
-        {filteredAttendance.length > 0 ? (
-          <>
-            {groupedAttendance.map(([monthYear, records]) => (
-              <View key={monthYear} style={styles.monthGroup}>
-                <Text style={styles.monthHeader}>{monthYear}</Text>
-                <View style={styles.monthContent}>
-                  {records.sort((a, b) => 
-                    new Date(b.date).getTime() - new Date(a.date).getTime()
-                  ).map((record, index) => (
-                    <View key={`${monthYear}-${index}`}>
-                      {renderAttendanceItem({ item: record })}
-                    </View>
-                  ))}
-                </View>
+      {showCharts ? (
+        <>
+          {/* Enhanced Stats Cards with Sparklines */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <View style={styles.statCardHeader}>
+                <Ionicons name="calendar" size={20} color="#2563eb" />
+                <Sparkline data={stats.sparklineData} color="#2563eb" />
               </View>
-            ))}
-          </>
-        ) : (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-clear" size={64} color="#d1d5db" />
-            <Text style={styles.emptyStateTitle}>No Records Found</Text>
-            <Text style={styles.emptyStateText}>
-              {selectedFilter === 'All' 
-                ? 'Start visiting the gym to see your attendance records here!'
-                : `No ${selectedFilter} visits found. Try a different filter.`
-              }
-            </Text>
+              <Text style={styles.statNumber}>{stats.total}</Text>
+              <Text style={styles.statLabel}>Total Days</Text>
+            </View>
+            
+            <View style={styles.statCard}>
+              <View style={styles.statCardHeader}>
+                <Ionicons name="calendar-outline" size={20} color="#10b981" />
+                <Sparkline data={stats.sparklineData} color="#10b981" />
+              </View>
+              <Text style={styles.statNumber}>{stats.thisMonth}</Text>
+              <Text style={styles.statLabel}>This Month</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statCardHeader}>
+                <Ionicons name="trending-up" size={20} color="#f59e0b" />
+                <Sparkline data={stats.sparklineData} color="#f59e0b" />
+              </View>
+              <Text style={styles.statNumber}>
+                {stats.thisMonth - stats.lastMonth > 0 ? '+' : ''}
+                {stats.thisMonth - stats.lastMonth}
+              </Text>
+              <Text style={styles.statLabel}>vs Last Month</Text>
+            </View>
           </View>
-        )}
-      </View>
+
+          {/* Calendar Heatmap */}
+          {attendanceData.length > 0 && (
+            <View style={styles.chartSection}>
+              <CalendarHeatmap data={attendanceData} />
+            </View>
+          )}
+
+          {/* Circular Progress for Monthly Goal */}
+          <View style={styles.chartSection}>
+            <Text style={styles.chartTitle}>Monthly Goal Progress</Text>
+            <View style={styles.progressContainer}>
+              <CircularProgress
+                progress={stats.monthlyProgress}
+                size={120}
+                strokeWidth={8}
+                color="#2563eb"
+                backgroundColor="#e5e7eb"
+                text={`${stats.thisMonth}`}
+                subtext={`of ${stats.monthlyGoal}`}
+              />
+              <View style={styles.progressText}>
+                <Text style={styles.progressLabel}>Days this month</Text>
+                <Text style={styles.progressPercentage}>
+                  {Math.round(stats.monthlyProgress)}% complete
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Weekly Pattern Bar Chart */}
+          {attendanceData.length > 0 && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>Weekly Activity Pattern</Text>
+              <View style={styles.chartWrapper}>
+                <BarChart
+                  data={weeklyData}
+                  width={screenWidth - 60}
+                  height={200}
+                  yAxisLabel=""
+                  yAxisSuffix=""
+                  yAxisInterval={1}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                  showValuesOnTopOfBars={true}
+                  fromZero={true}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Monthly Trend Line Chart */}
+          {attendanceData.length > 0 && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>6-Month Trend</Text>
+              <View style={styles.chartWrapper}>
+                <LineChart
+                  data={monthlyTrendData}
+                  width={screenWidth - 60}
+                  height={200}
+                  yAxisLabel=""
+                  yAxisSuffix=""
+                  yAxisInterval={1}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                  bezier={true}
+                />
+              </View>
+            </View>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Original List View */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <Ionicons name="calendar" size={24} color="#2563eb" />
+              <Text style={styles.statNumber}>{stats.total}</Text>
+              <Text style={styles.statLabel}>Total Days</Text>
+            </View>
+            
+            <View style={styles.statCard}>
+              <Ionicons name="calendar-outline" size={24} color="#10b981" />
+              <Text style={styles.statNumber}>{stats.thisMonth}</Text>
+              <Text style={styles.statLabel}>This Month</Text>
+            </View>
+          </View>
+
+          {/* Filter Buttons */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Filter by Day</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.filterContainer}
+            >
+              {filters.map(filter => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.filterButton,
+                    selectedFilter === filter && styles.filterButtonActive
+                  ]}
+                  onPress={() => setSelectedFilter(filter)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    selectedFilter === filter && styles.filterButtonTextActive
+                  ]}>
+                    {filter}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Attendance List */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {selectedFilter === 'All' ? 'All Days' : `${selectedFilter} Sessions`}
+              </Text>
+              <Text style={styles.resultCount}>
+                {filteredAttendance.length} days
+              </Text>
+            </View>
+
+            {filteredAttendance.length > 0 ? (
+              filteredAttendance.slice(0, 10).map((record, index) => (
+                <View key={index} style={styles.attendanceItem}>
+                  <View style={styles.attendanceContent}>
+                    <Text style={styles.dayName}>{record.dayName || 'Unknown'}</Text>
+                    <Text style={styles.attendanceDate}>
+                      {new Date(record.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-clear" size={64} color="#d1d5db" />
+                <Text style={styles.emptyStateTitle}>No Records Found</Text>
+                <Text style={styles.emptyStateText}>
+                  Start visiting the gym to see your records here!
+                </Text>
+              </View>
+            )}
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 };
@@ -409,6 +600,9 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 45,
     backgroundColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 24,
@@ -416,9 +610,22 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6b7280',
-    marginTop: 4,
+    marginTop: 2,
+  },
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+  },
+  toggleText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#2563eb',
+    fontWeight: '500',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -437,6 +644,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  statCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -448,37 +662,78 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
   },
-  section: {
+  sparkline: {
+    marginLeft: 8,
+  },
+  chartSection: {
     margin: 20,
     marginTop: 0,
-  },
-  frequentDayCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
-    marginBottom: 20,
   },
-  frequentDayHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  frequentDayTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginLeft: 8,
-  },
-  frequentDayName: {
-    fontSize: 24,
+  chartTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  chart: {
+    borderRadius: 8,
+    marginVertical: 8,
+    marginStart: -23,
+  },
+  heatmapContainer: {
+    alignItems: 'center',
+  },
+  heatmapGrid: {
+    flexDirection: 'row',
+    marginVertical: 16,
+  },
+  heatmapWeek: {
+    marginRight: 2,
+  },
+  heatmapDay: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    marginBottom: 2,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circularProgressContainer: {
+    alignItems: 'center',
+  },
+  progressText: {
+    marginLeft: 20,
+    alignItems: 'flex-start',
+  },
+  progressLabel: {
+    fontSize: 16,
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  progressPercentage: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  section: {
+    margin: 20,
+    marginTop: 0,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -520,40 +775,19 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: 'white',
   },
-  monthGroup: {
-    marginBottom: 24,
-  },
-  monthHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#374151',
-    marginBottom: 12,
-    paddingLeft: 4,
-  },
-  monthContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
   attendanceItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  dayIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+    elevation: 1,
   },
   attendanceContent: {
     flex: 1,
@@ -567,9 +801,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
-  },
-  checkIcon: {
-    marginLeft: 8,
   },
   emptyState: {
     backgroundColor: 'white',

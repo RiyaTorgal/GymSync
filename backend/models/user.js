@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   attendance: [
     {
       date: { type: Date, default: Date.now },
+      dayName: { type: String },
       classType: { type: String }, // optional (e.g., Legs/Upper Body/etc.)
     },
   ],

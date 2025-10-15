@@ -1,4 +1,4 @@
-# 🏋️ GymSync - Fitness Management System
+# GymSync - Fitness Management System
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-brightgreen)](https://nodejs.org/)
@@ -7,24 +7,24 @@
 
 A comprehensive MERN-based fitness management application that enables gym administrators to track member attendance, manage workout schedules, monitor progress, and streamline gym operations with support for both local and cloud databases.
 
-## ✨ Features
+## Features
 
 ### User Management
-- 🔐 **Secure Authentication** - JWT-based authentication with bcrypt password hashing
-- 👤 **User Registration & Login** - Complete user account management
-- 📊 **Profile Management** - Update membership types, personal info
-- 🔑 **Password Management** - Change password, account deletion
-- 🚪 **Session Management** - Logout, logout from all devices
+- **Secure Authentication** - JWT-based authentication with bcrypt password hashing
+- **User Registration & Login** - Complete user account management
+- **Profile Management** - Update membership types, personal info
+- **Password Management** - Change password, account deletion
+- **Session Management** - Logout, logout from all devices
 
 ### Attendance System
-- ✅ **Daily Attendance Tracking** - Mark attendance for current day
-- 📅 **Historical Records** - View attendance by date range or day name
-- 🔄 **Duplicate Prevention** - Prevents multiple check-ins per day
-- 📈 **Attendance Count** - Auto-increment attendance counter
+- **Daily Attendance Tracking** - Mark attendance for current day
+- **Historical Records** - View attendance by date range or day name
+- **Duplicate Prevention** - Prevents multiple check-ins per day
+- **Attendance Count** - Auto-increment attendance counter
 
 ### Workout Management
-- 💪 **200+ Exercises Database** - Comprehensive exercise library
-- 📋 **Weekly Schedule** - Pre-configured 6-day workout plan
+- **200+ Exercises Database** - Comprehensive exercise library
+- **Weekly Schedule** - Pre-configured 6-day workout plan
   - Monday: Legs Day
   - Tuesday: Upper Body + Abs
   - Wednesday: Inner & Outer Thighs + Back
@@ -32,22 +32,22 @@ A comprehensive MERN-based fitness management application that enables gym admin
   - Friday: Legs Day
   - Saturday: Upper Body + Abs
   - Sunday: Rest Day
-- 🎯 **Custom Workout Plans** - Generate personalized workouts based on:
+- **Custom Workout Plans** - Generate personalized workouts based on:
   - Workout type (Strength, Cardio, Flexibility, Balance)
   - Difficulty level (Beginner, Intermediate, Advanced)
   - Target muscle groups
   - Available equipment
   - Desired duration
-- 🔍 **Exercise Filtering** - Search by type, muscle, equipment, difficulty
-- ⏱️ **Calorie Estimation** - Automatic calorie burn calculation
-- 📊 **Duration Tracking** - Estimated workout duration
+- **Exercise Filtering** - Search by type, muscle, equipment, difficulty
+- **Calorie Estimation** - Automatic calorie burn calculation
+- **Duration Tracking** - Estimated workout duration
 
 ### Admin Features
-- 👥 **Member Management** - View all registered users
-- 📊 **Dashboard** - Overview of gym statistics
-- 📈 **Reports** - Attendance and progress tracking
+- **Member Management** - View all registered users
+- **Dashboard** - Overview of gym statistics
+- **Reports** - Attendance and progress tracking
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **React Native** - Cross-platform mobile development
@@ -73,7 +73,7 @@ A comprehensive MERN-based fitness management application that enables gym admin
 - **ESLint** - Code linting
 - **Postman** - API testing
 
-## 🏗 Architecture
+## Architecture
 
 ### System Architecture
 
@@ -118,39 +118,39 @@ A comprehensive MERN-based fitness management application that enables gym admin
                                               └─────────────────────┘
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 GYMSYNC/
-├── frontend/                    # React Native mobile app
-│   ├── app/                    # Main application routes
-│   ├── assets/                 # Images, fonts, icons
-│   ├── components/             # Reusable UI components
-│   ├── constants/              # API endpoints, config
-│   ├── hooks/                  # Custom React hooks
-│   ├── scripts/                # Utility scripts
+├── frontend/                     # React Native mobile app
+│   ├── app/                      # Main application routes
+│   ├── assets/                   # Images, fonts, icons
+│   ├── components/               # Reusable UI components
+│   ├── constants/                # API endpoints, config
+│   ├── hooks/                    # Custom React hooks
+│   ├── scripts/                  # Utility scripts
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── backend/                     # Node.js/Express server
-│   ├── models/                 # Mongoose schemas
-│   │   ├── user.js            # User model
-│   │   └── excercise.js       # Exercise model
-│   ├── routes/                 # API routes
-│   │   ├── userRoutes.js      # User endpoints
-│   │   └── excerciseRoutes.js # Exercise endpoints
-│   ├── test/                   # Test scripts
+├── backend/                      # Node.js/Express server
+│   ├── models/                   # Mongoose schemas
+│   │   ├── user.js               # User model
+│   │   └── excercise.js          # Exercise model
+│   ├── routes/                   # API routes
+│   │   ├── userRoutes.js         # User endpoints
+│   │   └── excerciseRoutes.js    # Exercise endpoints
+│   ├── test/                     # Test scripts
 │   │   ├── userTest.js
 │   │   └── attendanceTest.js
-│   ├── index.js               # Server entry point
+│   ├── index.js                  # Server entry point
 │   └── package.json
 │
-├── config/                      # Configuration files
-│   ├── .env                    # Environment variables
-│   ├── .env.example           # Env template
-│   └── file_structure.txt     # Detailed structure
+├── config/                       # Configuration files
+│   ├── .env                      # Environment variables
+│   ├── .env.example              # Env template
+│   └── file_structure.txt        # Detailed structure
 │
-├── ui_structure/               # UI/UX designs
+├── ui_structure/                 # UI/UX designs
 │   ├── adminUI/
 │   ├── clientUI/
 │   └── trainerUI/
@@ -160,7 +160,7 @@ GYMSYNC/
 └── gym_sync_full_app_architecture_mern_stack.md
 ```
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -190,7 +190,7 @@ cd ../frontend
 npm install
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -226,7 +226,7 @@ mongod --dbpath /path/to/data/directory
 3. Get connection string
 4. Update `MONGO_URI` in `.env`
 
-## 🏃 Usage
+## Usage
 
 ### Start Backend Server
 
@@ -252,7 +252,7 @@ Expo DevTools opens at: `http://localhost:19006`
 - **Health Check**: `http://localhost:5000/health`
 - **API Docs**: `http://localhost:5000/`
 
-## 📡 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 
@@ -424,7 +424,7 @@ Content-Type: application/json
 }
 ```
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### User Collection
 
@@ -473,7 +473,7 @@ Content-Type: application/json
 }
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Run Backend Tests
 
@@ -494,7 +494,7 @@ node test/attendanceTest.js
 
 Import the API collection and test all endpoints with proper authentication headers.
 
-## 📊 Diagrams
+## Diagrams
 
 ### User Flow Diagram
 Shows the complete user journey through the application:
@@ -523,14 +523,14 @@ Shows system components and data flow:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [React Native Documentation](https://reactnative.dev/)
 - [Express.js Documentation](https://expressjs.com/)
 - [MongoDB Documentation](https://docs.mongodb.com/)
 - [Mongoose Documentation](https://mongoosejs.com/)
 
-## 📈 Project Status
+## Project Status
 
 **Current Version:** 1.0.0
 

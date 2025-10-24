@@ -11,7 +11,7 @@ const WEEKLY_SCHEDULE = {
     type: "Strength",
     targetMuscles: ["Legs", "Glutes", "Hamstrings", "Quadriceps"],
     keywords: ["Squat", "Lunge", "Leg Extension", "Leg Curl", "Leg Press"],
-    section: "Lower Body",
+    section: "Legs",
     description: "Focus on quadriceps, hamstrings, squats, lunges, leg extensions, leg curls, and leg press"
   },
   Tuesday: {
@@ -43,7 +43,7 @@ const WEEKLY_SCHEDULE = {
     type: "Strength",
     targetMuscles: ["Legs", "Glutes", "Hamstrings", "Quadriceps"],
     keywords: ["Squat", "Lunge", "Leg Extension", "Leg Curl", "Leg Press"],
-    section: "Lower Body",
+    section: "Legs",
     description: "Focus on quadriceps, hamstrings, squats, lunges, leg extensions, leg curls, and leg press"
   },
   Saturday: {

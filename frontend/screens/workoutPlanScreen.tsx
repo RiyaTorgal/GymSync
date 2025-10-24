@@ -345,7 +345,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
     <>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.scrollContainer}
+        // contentContainerStyle={styles.scrollContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -438,6 +438,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
           </View>
         )}
 
+        <View style={styles.screenPadding}>
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={createCustomWorkout}
@@ -445,15 +446,17 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
           <Ionicons name="add-circle-outline" size={20} color="white" style={styles.buttonIcon} />
           <Text style={styles.primaryButtonText}>Create Custom Workout</Text>
         </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Workout Detail Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={false}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
+        <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity
@@ -544,6 +547,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
               </>
             )}
           </ScrollView>
+        </View>
         </View>
       </Modal>
 
@@ -654,13 +658,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
-    padding: 20,
+    // padding: 20,
     paddingBottom: 100,
   },
+  screenPadding:{
+    padding: 20,
+  },
   header: {
-    paddingTop: 45,
+    // flexDirection: 'row',
+    // justifyContent: 'space-between',
     // alignItems: 'center',
+    padding: 20,
     marginBottom: 24,
+    paddingTop: 45,
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,
@@ -689,6 +700,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   retryButton: {
     backgroundColor: '#2563eb',
     paddingHorizontal: 24,
@@ -705,7 +723,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 24,
+    // marginTop: 24,
     flexDirection: 'row',
     gap: 8,
     shadowColor: '#000',
@@ -744,6 +762,8 @@ const styles = StyleSheet.create({
   },
   weeklySchedule: {
     gap: 12,
+    paddingTop: -10,
+    padding: 20,
   },
   dayPlanCard: {
     backgroundColor: 'white',
@@ -841,13 +861,16 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: 'white',
+    paddingBottom: 70,
+    borderRadius: 20,
+    // backgroundColor: '',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
+    // paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },

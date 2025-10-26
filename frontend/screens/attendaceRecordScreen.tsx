@@ -438,11 +438,11 @@ const AttendanceRecordScreen: React.FC<AttendanceRecordScreenProps> = ({ user })
           </View>
 
           {/* Calendar Heatmap */}
-          {attendanceData.length > 0 && (
+          {/* {attendanceData.length > 0 && (
             <View style={styles.chartSection}>
               <CalendarHeatmap data={attendanceData} />
             </View>
-          )}
+          )} */}
 
           {/* Circular Progress for Monthly Goal */}
           <View style={styles.chartSection}>

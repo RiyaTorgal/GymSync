@@ -468,12 +468,12 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
                 {user.membershipType} Member
               </Text>
             </View>
-            <View style={styles.workoutBadge}>
+            {/* <View style={styles.workoutBadge}>
               <Ionicons name="barbell" size={16} color="#6b7280" />
               <Text style={styles.workoutText}>
                 {user.workoutType} Focus
               </Text>
-            </View>
+            </View> */}
           </View>
 
           <View style={styles.statsRow}>

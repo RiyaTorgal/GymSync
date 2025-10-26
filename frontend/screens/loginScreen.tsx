@@ -192,6 +192,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               value={formData.password}
               onChangeText={(value) => handleInputChange('password', value)}
               secureTextEntry
+              autoCapitalize="none"
               editable={!loading}
             />
           </View>

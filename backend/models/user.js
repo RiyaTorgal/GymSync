@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 6 },
   membershipType: { type: String, enum: ["Monthly", "Quarterly", "Annual"], required: true },
   joinDate: { type: Date, default: Date.now },
-  // Removed workoutType field since we're using a fixed schedule
   attendanceCount: { type: Number, default: 0 },
+  weeklyGoal: { type: Number, default: 5, min: 1, max: 7 }, // Default goal: 5 workouts per week
   attendance: [
     {
       date: { type: Date, default: Date.now },

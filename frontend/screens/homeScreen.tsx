@@ -8,6 +8,7 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +27,7 @@ interface User {
   attendanceCount?: number;
   joinDate?: string;
   attendance?: AttendanceRecord[];
+  weeklyGoal?: number;
 }
 
 interface Exercise {
@@ -51,6 +53,15 @@ interface DayWorkout {
   exerciseCount: number;
 }
 
+interface WeeklyGoal {
+  completed: number;
+  target: number;
+  percentage: number;
+  remaining: number;
+  startDate: string;
+  endDate: string;
+}
+
 interface DashboardScreenProps {
   user: User;
   onLogout: () => void;
@@ -63,6 +74,10 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
   const [todaysWorkout, setTodaysWorkout] = useState<DayWorkout | null>(null);
   const [loadingWorkout, setLoadingWorkout] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [weeklyGoal, setWeeklyGoal] = useState<WeeklyGoal | null>(null);
+  const [loadingWeeklyGoal, setLoadingWeeklyGoal] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [newGoalValue, setNewGoalValue] = useState('5');
 
   useEffect(() => {
     const initializeData = async () => {
@@ -71,6 +86,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
         setAuthToken(token);
         if (token) {
           await fetchUserData(token);
+          await fetchWeeklyGoal(token);
         }
       } catch (error) {
         console.error('Failed to initialize data:', error);
@@ -107,6 +123,74 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
     } catch (error) {
       console.error("Dashboard fetch error:", error);
       Alert.alert("Error", "Something went wrong");
+    }
+  };
+
+  const fetchWeeklyGoal = async (token?: string) => {
+    setLoadingWeeklyGoal(true);
+    try {
+      const authTokenToUse = token || authToken;
+      if (!authTokenToUse) {
+        return;
+      }
+
+      const response = await fetch(
+        "http://192.168.1.10:5000/api/users/weekly-goal",
+        {
+          headers: { 
+            Authorization: `Bearer ${authTokenToUse}` 
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        setWeeklyGoal(data.weeklyGoal);
+        setNewGoalValue(data.weeklyGoal.target.toString());
+      }
+    } catch (error) {
+      console.error("Failed to fetch weekly goal:", error);
+    } finally {
+      setLoadingWeeklyGoal(false);
+    }
+  };
+
+  const updateWeeklyGoal = async () => {
+    try {
+      if (!authToken) {
+        Alert.alert("Error", "User not authenticated");
+        return;
+      }
+
+      const goalValue = parseInt(newGoalValue);
+      if (isNaN(goalValue) || goalValue < 1 || goalValue > 7) {
+        Alert.alert("Invalid Goal", "Weekly goal must be between 1 and 7");
+        return;
+      }
+
+      const response = await fetch(
+        "http://192.168.1.10:5000/api/users/weekly-goal",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ weeklyGoal: goalValue }),
+        }
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert("Success", "Weekly goal updated successfully");
+        await fetchWeeklyGoal();
+        setEditingGoal(false);
+      } else {
+        Alert.alert("Error", data.message || "Failed to update weekly goal");
+      }
+    } catch (error) {
+      console.error("Update weekly goal error:", error);
+      Alert.alert("Error", "Failed to update weekly goal");
     }
   };
 
@@ -192,6 +276,8 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
       if (data.success) {
         // Update local user state with new data
         setCurrentUser(data.user);
+        // Refresh weekly goal to show updated progress
+        await fetchWeeklyGoal();
         Alert.alert("Success!", data.message);
       } else {
         Alert.alert("Info", data.message || "Failed to mark attendance");
@@ -208,7 +294,8 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
     setRefreshing(true);
     Promise.all([
       fetchUserData(),
-      fetchTodaysWorkout()
+      fetchTodaysWorkout(),
+      fetchWeeklyGoal()
     ]).finally(() => {
       setRefreshing(false);
     });
@@ -339,8 +426,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
 
       {/* Quick Actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Check-in</Text>
-        
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Quick Check-in</Text>
+        </View>
         {/* Today's Workout Card */}
         {loadingWorkout ? (
           <View style={styles.workoutLoadingCard}>
@@ -434,6 +522,86 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
         )}
       </View>
 
+        {/* Weekly Goal - Now Dynamic */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Weekly Goal</Text>
+          {!editingGoal && (
+            <TouchableOpacity onPress={() => setEditingGoal(true)}>
+              <Ionicons name="create-outline" size={20} color="#2563eb" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {loadingWeeklyGoal ? (
+          <View style={styles.goalCard}>
+            <ActivityIndicator size="small" color="#2563eb" />
+            <Text style={styles.loadingText}>Loading weekly goal...</Text>
+          </View>
+        ) : weeklyGoal ? (
+          <View style={styles.goalCard}>
+            {editingGoal ? (
+              <View style={styles.editGoalContainer}>
+                <Text style={styles.editGoalLabel}>Set weekly workout goal (1-7):</Text>
+                <View style={styles.editGoalInputRow}>
+                  <TextInput
+                    style={styles.goalInput}
+                    value={newGoalValue}
+                    onChangeText={setNewGoalValue}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                  />
+                  <TouchableOpacity 
+                    style={styles.saveGoalButton}
+                    onPress={updateWeeklyGoal}
+                  >
+                    <Ionicons name="checkmark" size={20} color="white" />
+                    <Text style={styles.saveGoalText}>Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.cancelGoalButton}
+                    onPress={() => {
+                      setEditingGoal(false);
+                      setNewGoalValue(weeklyGoal.target.toString());
+                    }}
+                  >
+                    <Ionicons name="close" size={20} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <>
+                <View style={styles.goalHeader}>
+                  <Text style={styles.goalText}>
+                    {weeklyGoal.completed} of {weeklyGoal.target} workouts completed
+                  </Text>
+                  <Text style={styles.goalPercentage}>{weeklyGoal.percentage}%</Text>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${Math.min(weeklyGoal.percentage, 100)}%` }]} />
+                </View>
+                {weeklyGoal.remaining > 0 ? (
+                  <Text style={styles.goalSubtext}>
+                    {weeklyGoal.remaining} more workout{weeklyGoal.remaining !== 1 ? 's' : ''} to reach your goal!
+                  </Text>
+                ) : (
+                  <View style={styles.goalAchievedContainer}>
+                    <Ionicons name="trophy" size={16} color="#f59e0b" />
+                    <Text style={styles.goalAchievedText}>
+                      Goal achieved! Great work! 🎉
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        ) : (
+          <View style={styles.goalCard}>
+            <Text style={styles.emptyStateText}>Unable to load weekly goal</Text>
+          </View>
+        )}
+      </View>
+
       {/* Recent Activity */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -470,21 +638,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
             </Text>
           </View>
         )}
-      </View>
-
-      {/* Weekly Goal */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Weekly Goal</Text>
-        <View style={styles.goalCard}>
-          <View style={styles.goalHeader}>
-            <Text style={styles.goalText}>3 of 5 workouts completed</Text>
-            <Text style={styles.goalPercentage}>60%</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '60%' }]} />
-          </View>
-          <Text style={styles.goalSubtext}>2 more workouts to reach your goal!</Text>
-        </View>
       </View>
     </ScrollView>
   );
@@ -775,7 +928,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
-    marginTop: 12,
+    // marginTop: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -812,6 +965,56 @@ const styles = StyleSheet.create({
   goalSubtext: {
     fontSize: 14,
     color: '#6b7280',
+  },
+  goalAchievedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  goalAchievedText: {
+    fontSize: 14,
+    color: '#059669',
+    fontWeight: '600',
+  },
+  editGoalContainer: {
+    gap: 12,
+  },
+  editGoalLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+  editGoalInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  goalInput: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  saveGoalButton: {
+    backgroundColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  saveGoalText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cancelGoalButton: {
+    padding: 12,
   },
 });
 

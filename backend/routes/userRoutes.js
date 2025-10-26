@@ -54,6 +54,25 @@ const getDayName = (date) => {
   return days[date.getDay()];
 };
 
+// Helper function to get start and end of current week (Monday to Sunday)
+const getCurrentWeekRange = () => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+  
+  // Calculate days to subtract to get to Monday (1)
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - daysToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  
+  return { startOfWeek, endOfWeek };
+};
+
 // Register a new user
 router.post("/register", async (req, res) => {
   console.log('Registration attempt:', { email: req.body.email });
@@ -257,6 +276,95 @@ router.get("/profile", authenticateToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: "Failed to fetch profile" 
+    });
+  }
+});
+
+// Get weekly goal progress (protected route)
+router.get("/weekly-goal", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    const { startOfWeek, endOfWeek } = getCurrentWeekRange();
+
+    // Count attendance for current week
+    const weeklyAttendance = user.attendance?.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate >= startOfWeek && recordDate <= endOfWeek;
+    }) || [];
+
+    const completedWorkouts = weeklyAttendance.length;
+    
+    // Default goal is 5 workouts per week (can be made customizable later)
+    const weeklyGoal = user.weeklyGoal || 5;
+    const percentage = Math.round((completedWorkouts / weeklyGoal) * 100);
+    const remaining = Math.max(0, weeklyGoal - completedWorkouts);
+
+    res.json({
+      success: true,
+      weeklyGoal: {
+        completed: completedWorkouts,
+        target: weeklyGoal,
+        percentage: percentage,
+        remaining: remaining,
+        startDate: startOfWeek,
+        endDate: endOfWeek
+      }
+    });
+
+  } catch (error) {
+    console.error("Weekly goal fetch error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch weekly goal" 
+    });
+  }
+});
+
+// Update weekly goal (protected route)
+router.put("/weekly-goal", authenticateToken, async (req, res) => {
+  try {
+    const { weeklyGoal } = req.body;
+
+    if (!weeklyGoal || weeklyGoal < 1 || weeklyGoal > 7) {
+      return res.status(400).json({
+        success: false,
+        message: "Weekly goal must be between 1 and 7"
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { weeklyGoal: weeklyGoal },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    console.log(`Weekly goal updated to ${weeklyGoal} for user ${user.name}`);
+
+    res.json({
+      success: true,
+      message: "Weekly goal updated successfully",
+      weeklyGoal: weeklyGoal
+    });
+
+  } catch (error) {
+    console.error("Update weekly goal error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update weekly goal"
     });
   }
 });

@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  // TextInput,
+  TextInput,
   Alert,
   Switch,
-  // Modal,
+  Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { Picker } from '@react-native-picker/picker';
+import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 
 // API Configuration
@@ -64,6 +64,177 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
+
+  const EditProfileModal = () => (
+    <Modal
+      visible={editMode}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => setEditMode(false)}
+    >
+      <View style={styles.modalOverlay}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity 
+            onPress={() => setEditMode(false)}
+            disabled={loading}
+          >
+            <Text style={styles.modalCancel}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Edit Profile</Text>
+          <TouchableOpacity 
+            onPress={handleSaveProfile}
+            disabled={loading}
+          >
+            <Text style={[styles.modalSave, loading && styles.disabledText]}>
+              {loading ? 'Saving...' : 'Save'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <TextInput
+              style={styles.input}
+              value={profileData.name}
+              onChangeText={(text) => setProfileData(prev => ({ ...prev, name: text }))}
+              placeholder="Enter your name"
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={profileData.email}
+              editable={false}
+            />
+            <Text style={styles.inputHelp}>Email cannot be changed</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Membership Type</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={profileData.membershipType}
+                onValueChange={(value) => setProfileData(prev => ({ ...prev, membershipType: value }))}
+                enabled={!loading}
+                style={styles.picker}
+              >
+                <Picker.Item label="Monthly" value="Monthly" />
+                <Picker.Item label="Quarterly" value="Quarterly" />
+                <Picker.Item label="Annual" value="Annual" />
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Workout Focus</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={profileData.workoutType}
+                onValueChange={(value) => setProfileData(prev => ({ ...prev, workoutType: value }))}
+                enabled={!loading}
+                style={styles.picker}
+              >
+                <Picker.Item label="Strength Training" value="Strength" />
+                <Picker.Item label="Cardio" value="Cardio" />
+                <Picker.Item label="Weight Loss" value="Weight Loss" />
+                <Picker.Item label="Muscle Building" value="Muscle Building" />
+                <Picker.Item label="General Fitness" value="General Fitness" />
+              </Picker>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+      </View>
+    </Modal>
+  );
+
+  // Change Password Modal
+  const ChangePasswordModal = () => (
+    <Modal
+      visible={changePasswordModal}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => setChangePasswordModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity 
+            onPress={() => setChangePasswordModal(false)}
+            disabled={loading}
+          >
+            <Text style={styles.modalCancel}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Change Password</Text>
+          <TouchableOpacity 
+            onPress={handleChangePassword}
+            disabled={loading}
+          >
+            <Text style={[styles.modalSave, loading && styles.disabledText]}>
+              {loading ? 'Changing...' : 'Change'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Current Password</Text>
+            <TextInput
+              style={styles.input}
+              value={passwordData.currentPassword}
+              onChangeText={(text) => setPasswordData(prev => ({ ...prev, currentPassword: text }))}
+              placeholder="Enter current password"
+              secureTextEntry
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>New Password</Text>
+            <TextInput
+              style={styles.input}
+              value={passwordData.newPassword}
+              onChangeText={(text) => setPasswordData(prev => ({ ...prev, newPassword: text }))}
+              placeholder="Enter new password"
+              secureTextEntry
+              editable={!loading}
+            />
+            <Text style={styles.inputHelp}>Must be at least 6 characters</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Confirm New Password</Text>
+            <TextInput
+              style={styles.input}
+              value={passwordData.confirmPassword}
+              onChangeText={(text) => setPasswordData(prev => ({ ...prev, confirmPassword: text }))}
+              placeholder="Confirm new password"
+              secureTextEntry
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.passwordTips}>
+            <Text style={styles.tipsTitle}>Password Requirements:</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+              <Text style={styles.tipText}>At least 6 characters long</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="information-circle" size={16} color="#6b7280" />
+              <Text style={styles.tipText}>Use a strong, unique password</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+      </View>
+    </Modal>
+  );
 
   React.useEffect(() => {
     const fetchToken = async () => {
@@ -418,6 +589,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
 
   return (
     <ScrollView style={styles.container}>
+      <EditProfileModal />
+      <ChangePasswordModal />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Account Settings</Text>
@@ -622,6 +795,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   header: { padding: 20, paddingTop: 45, backgroundColor: 'white' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
@@ -659,6 +833,112 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
   destructiveText: { color: '#ef4444' },
   settingSubtitle: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'space-around',
+    // alignItems: 'center',
+    padding: 20,
+    
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    // paddingHorizontal: 20,
+    padding: 20,
+    // paddingBottom: 20,
+    borderTopEndRadius: 20,
+    borderTopStartRadius: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  modalCancel: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  modalSave: {
+    fontSize: 16,
+    color: '#2563eb',
+    fontWeight: '600',
+  },
+  disabledText: {
+    opacity: 0.5,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  disabledInput: {
+    backgroundColor: '#f3f4f6',
+    color: '#9ca3af',
+  },
+  inputHelp: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+  },
+  passwordTips: {
+    backgroundColor: '#f0f9ff',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+  },
+  tipsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e40af',
+    marginBottom: 8,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  tipText: {
+    fontSize: 13,
+    color: '#4b5563',
+    marginLeft: 8,
+  },
 });
 
 export default AccountSettingsScreen;

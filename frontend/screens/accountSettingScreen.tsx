@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,12 @@ const API_BASE_URL = 'http://192.168.1.10:5000/api/users';
 
 interface User {
   _id?: string;
-  name: string;
+  // name: UserName;
+  name: {
+    firstname: string;
+    middlename?: string;
+    lastname: string;
+  };
   email: string;
   membershipType: string;
   workoutType: string;
@@ -39,11 +44,17 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   onUserUpdate 
 }) => {
   const [editMode, setEditMode] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: user.name,
-    email: user.email,
-    membershipType: user.membershipType,
-    workoutType: user.workoutType,
+// const [currentUser, setProfileData] = useState({
+//   name: user?.name || { firstname: '', middlename: '', lastname: '' },
+//   email: user?.email || '',
+//   membershipType: user?.membershipType || '',
+//   workoutType: user?.workoutType || '',
+// });
+  const [currentUser, setCurrentUser] = useState<User>({
+    name: { firstname: '', middlename: '', lastname: '' },
+    email: '',
+    membershipType: '',
+    workoutType: '',
   });
   const [notifications, setNotifications] = useState({
     workoutReminders: true,
@@ -64,6 +75,19 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setCurrentUser({
+        name: user.name || { firstname: '', middlename: '', lastname: '' },
+        email: user.email || '',
+        membershipType: user.membershipType || '',
+        workoutType: user.workoutType || '',
+        attendanceCount: user.attendanceCount,
+        joinDate: user.joinDate,
+      });
+    }
+  }, [user]);
 
   const EditProfileModal = () => (
     <Modal
@@ -95,20 +119,54 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
         <ScrollView style={styles.modalContent}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Name</Text>
-            <TextInput
-              style={styles.input}
-              value={profileData.name}
-              onChangeText={(text) => setProfileData(prev => ({ ...prev, name: text }))}
-              placeholder="Enter your name"
-              editable={!loading}
-            />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={currentUser?.name?.firstname ?? ''}
+                onChangeText={(text) =>
+                  setCurrentUser((prev) => ({
+                    ...prev,
+                    name: { ...prev.name, firstname: text },
+                  }))
+                }
+                placeholder="Enter first name"
+                editable={!loading}
+              />
+              <Text style={[styles.inputLabel, { marginTop: 16 }]}>Middle Name</Text>
+              <TextInput
+                style={styles.input}
+                value={currentUser?.name?.middlename ?? ''}
+                onChangeText={(text) =>
+                  setCurrentUser((prev) => ({
+                    ...prev,
+                    name: { ...prev.name, middlename: text },
+                  }))
+                }
+                placeholder="Enter middle name (optional)"
+                editable={!loading}
+              />
+              <Text style={[styles.inputLabel, { marginTop: 16 }]}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={currentUser?.name?.lastname ?? ''}
+                onChangeText={(text) =>
+                  setCurrentUser((prev) => ({
+                    ...prev,
+                    name: { ...prev.name, lastname: text },
+                  }))
+                }
+                placeholder="Enter last name"
+                editable={!loading}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={[styles.input, styles.disabledInput]}
-              value={profileData.email}
+              value={currentUser.email}
               editable={false}
             />
             <Text style={styles.inputHelp}>Email cannot be changed</Text>
@@ -118,8 +176,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
             <Text style={styles.inputLabel}>Membership Type</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={profileData.membershipType}
-                onValueChange={(value) => setProfileData(prev => ({ ...prev, membershipType: value }))}
+                selectedValue={currentUser.membershipType}
+                onValueChange={(value) => setCurrentUser(prev => ({ ...prev, membershipType: value }))}
                 enabled={!loading}
                 style={styles.picker}
               >
@@ -134,8 +192,8 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
             <Text style={styles.inputLabel}>Workout Focus</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={profileData.workoutType}
-                onValueChange={(value) => setProfileData(prev => ({ ...prev, workoutType: value }))}
+                selectedValue={currentUser.workoutType}
+                onValueChange={(value) => setCurrentUser(prev => ({ ...prev, workoutType: value }))}
                 enabled={!loading}
                 style={styles.picker}
               >
@@ -277,7 +335,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   };
 
   const handleSaveProfile = async () => {
-    if (!profileData.name.trim()) {
+    if (!currentUser.name.firstname.trim() || !currentUser.name.lastname.trim()) {
       Alert.alert('Error', 'Name cannot be empty');
       return;
     }
@@ -285,9 +343,9 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
     setLoading(true);
     try {
       const data = await makeApiCall('/profile', 'PUT', {
-        name: profileData.name,
-        membershipType: profileData.membershipType,
-        workoutType: profileData.workoutType,
+        name: currentUser.name,
+        membershipType: currentUser.membershipType,
+        workoutType: currentUser.workoutType,
       });
 
       if (data.success) {
@@ -607,11 +665,14 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user.name.charAt(0).toUpperCase()}
+                {user?.name?.firstname
+                ? user.name.firstname.charAt(0).toUpperCase()
+                : 'U'
+                }
               </Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{user.name}</Text>
+              <Text style={styles.profileName}>{user?.name?.firstname ?? ''} {user?.name?.middlename ?? ''} {user?.name?.lastname ?? ''}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
               <Text style={styles.joinDate}>{formatJoinDate(user.joinDate)}</Text>
             </View>

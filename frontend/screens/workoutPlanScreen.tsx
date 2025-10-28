@@ -54,7 +54,12 @@ interface WorkoutPlan {
 }
 
 interface User {
-  name: string;
+  // name: string;
+    name: {
+    firstname: string;
+    middlename?: string;
+    lastname: string;
+  };
 }
 
 interface WorkoutPlanScreenProps {
@@ -243,18 +248,18 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
   };
 
   // Fetch today's workout specifically
-  const fetchTodaysWorkout = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/exercises/today`);
-      const data = await response.json();
+  // const fetchTodaysWorkout = async () => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/exercises/today`);
+  //     const data = await response.json();
       
-      if (data.success && !data.isRestDay) {
-        setTodaysWorkout(data.workout);
-      }
-    } catch (err) {
-      console.error('Error fetching today\'s workout:', err);
-    }
-  };
+  //     if (data.success && !data.isRestDay) {
+  //       setTodaysWorkout(data.workout);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching today\'s workout:', err);
+  //   }
+  // };
 
   // Create custom workout plan
   const createCustomWorkout = async () => {
@@ -352,7 +357,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Workout Plans</Text>
-          <Text style={styles.subtitle}>Hi {user.name}, here&apos;s your weekly schedule</Text>
+          <Text style={styles.subtitle}>Hi {user?.name?.firstname}, here&apos;s your weekly schedule</Text>
         </View>
 
         {loading ? (

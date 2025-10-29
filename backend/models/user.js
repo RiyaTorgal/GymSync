@@ -20,6 +20,43 @@ const userSchema = new mongoose.Schema({
       classType: { type: String }, // optional (e.g., Legs/Upper Body/etc.)
     },
   ],
+  dateofbirth: { type: Date, required: true },
+  isActive: { type: Boolean, default: true },
+  contactInfo: {
+    primaryPhone: { type: String },
+    secondaryPhone: { type: String },
+    address:{
+      building: { type: String, required: [true, 'Building name is required'], },
+      landmark: { type: String, required: [true, 'Landmark is required'], },
+      city: { type: String, required: [true, 'City is required'], },
+      state: { type: String,required: [true, 'State is required'], },
+      country: { type: String, required: [true, 'Country is required'], },
+      pincode: { type: String, required: [true, 'Pincode is required'],}
+    }
+  },
+  healthInfo:{
+    weight: { type: Number }, // in kgs
+    height: { type: Number, min: [100, 'Height must be at least 100 cm'], max: [250, 'Height must be less than 250 cm'], default: null }, // in cms
+    bloodGroup: { type: String },
+    knownAllergies: { type: String },
+    medicalHistiory: {
+      accidents: [
+        {
+          description: { type: String },
+          date: { type: Date},
+          recovered: { type: Boolean, default: true },
+        },
+      ],
+      chronicConditions:[
+        {
+            conditionName: { type: String },
+            diagnosedDate: { type: Date },
+            underMedication: { type: Boolean, default: false },
+            notes: { type: String },
+        }
+      ],
+    },
+  }
 });
 
 // Hash password before saving

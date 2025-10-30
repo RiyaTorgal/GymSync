@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import screens
@@ -24,29 +24,29 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({ user, onLogout }) => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
+          let iconName: keyof typeof Ionicons.glyphMap;
 
           switch (route.name) {
             case 'Dashboard':
-              iconName = 'dashboard';
+              iconName = focused ? 'grid' : 'grid-outline';
               break;
             case 'Attendance':
-              iconName = 'event-available';
+              iconName = focused ? 'checkmark-done-circle' : 'checkmark-done-circle-outline';
               break;
             case 'Workout':
-              iconName = 'fitness-center';
+              iconName = focused ? 'barbell' : 'barbell-outline';
               break;
             case 'Diet':
-              iconName = 'restaurant';
+              iconName = focused ? 'restaurant' : 'restaurant-outline';
               break;
             case 'Settings':
-              iconName = 'settings';
+              iconName = focused ? 'settings' : 'settings-outline';
               break;
             default:
-              iconName = 'home';
+              iconName = focused ? 'home' : 'home-outline';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: '#6b7280',
@@ -65,25 +65,25 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({ user, onLogout }) => {
         headerShown: false,
       })}
     >
-        <Tab.Screen name="Dashboard">
-            {() => <DashboardScreen user={user} onLogout={onLogout} />}
-        </Tab.Screen>
+      <Tab.Screen name="Dashboard">
+        {() => <DashboardScreen user={user} onLogout={onLogout} />}
+      </Tab.Screen>
 
-        <Tab.Screen name="Attendance">
-            {() => <AttendaceRecordScreen user={user} />}
-        </Tab.Screen>
+      <Tab.Screen name="Attendance">
+        {() => <AttendaceRecordScreen user={user} />}
+      </Tab.Screen>
 
-        <Tab.Screen name="Workout">
-            {() => <WorkoutPlanScreen user={user} />}
-        </Tab.Screen>
+      <Tab.Screen name="Workout">
+        {() => <WorkoutPlanScreen user={user} />}
+      </Tab.Screen>
 
-        <Tab.Screen name="Diet">
-            {() => <DietRecordScreen user={user} />}
-        </Tab.Screen>
+      <Tab.Screen name="Diet">
+        {() => <DietRecordScreen user={user} />}
+      </Tab.Screen>
 
-        <Tab.Screen name="Settings">
-            {() => <AccountSettingsScreen user={user} onLogout={onLogout} />}
-        </Tab.Screen>
+      <Tab.Screen name="Settings">
+        {() => <AccountSettingsScreen user={user} onLogout={onLogout} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };

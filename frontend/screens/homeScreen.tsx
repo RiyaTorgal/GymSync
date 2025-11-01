@@ -21,11 +21,14 @@ interface AttendanceRecord {
 interface User {
   _id?: string;
   // name: string;
-    name: {
-    firstname: string;
-    middlename?: string;
-    lastname: string;
-  };
+  //   name: {
+  //   firstname: string;
+  //   middlename?: string;
+  //   lastname: string;
+  // };
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   email: string;
   membershipType: string;
   workoutType: string;
@@ -396,7 +399,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ user, onLogout }) => 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.greeting}>{getGreeting()},</Text>
-          <Text style={styles.userName}>{currentUser?.name?.firstname ?? ""} {currentUser?.name?.middlename ?? ""} {currentUser?.name?.lastname ?? ""}</Text>
+          <Text style={styles.userName}>{currentUser.firstName ?? ""} {currentUser.lastName ?? ""}</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
           <Ionicons name="person-circle" size={32} color="#2563eb" />

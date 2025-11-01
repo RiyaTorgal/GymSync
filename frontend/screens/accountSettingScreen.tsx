@@ -20,11 +20,14 @@ const API_BASE_URL = 'http://192.168.1.10:5000/api/users';
 interface User {
   _id?: string;
   // name: UserName;
-  name: {
-    firstname: string;
-    middlename?: string;
-    lastname: string;
-  };
+  // name: {
+  //   firstname: string;
+  //   middlename?: string;
+  //   lastname: string;
+  // };
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   email: string;
   membershipType: string;
   workoutType: string;
@@ -51,7 +54,10 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
 //   workoutType: user?.workoutType || '',
 // });
   const [currentUser, setCurrentUser] = useState<User>({
-    name: { firstname: '', middlename: '', lastname: '' },
+    // name: { firstname: '', middlename: '', lastname: '' },
+    firstName: '',
+    middleName: '',
+    lastName: '',
     email: '',
     membershipType: '',
     workoutType: '',
@@ -79,7 +85,10 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   useEffect(() => {
     if (user) {
       setCurrentUser({
-        name: user.name || { firstname: '', middlename: '', lastname: '' },
+        // name: user.name || { firstname: '', middlename: '', lastname: '' },
+        firstName: user.firstName || '',
+        middleName: user.middleName || '',
+        lastName: user.lastName || '',
         email: user.email || '',
         membershipType: user.membershipType || '',
         workoutType: user.workoutType || '',
@@ -123,11 +132,11 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               <Text style={styles.inputLabel}>First Name</Text>
               <TextInput
                 style={styles.input}
-                value={currentUser?.name?.firstname ?? ''}
+                value={currentUser?.firstName ?? ''}
                 onChangeText={(text) =>
                   setCurrentUser((prev) => ({
                     ...prev,
-                    name: { ...prev.name, firstname: text },
+                    name: { ...prev, firstName: text },
                   }))
                 }
                 placeholder="Enter first name"
@@ -136,11 +145,11 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               <Text style={[styles.inputLabel, { marginTop: 16 }]}>Middle Name</Text>
               <TextInput
                 style={styles.input}
-                value={currentUser?.name?.middlename ?? ''}
+                value={currentUser?.middleName ?? ''}
                 onChangeText={(text) =>
                   setCurrentUser((prev) => ({
                     ...prev,
-                    name: { ...prev.name, middlename: text },
+                    name: { ...prev, middleName: text },
                   }))
                 }
                 placeholder="Enter middle name (optional)"
@@ -149,11 +158,11 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
               <Text style={[styles.inputLabel, { marginTop: 16 }]}>Last Name</Text>
               <TextInput
                 style={styles.input}
-                value={currentUser?.name?.lastname ?? ''}
+                value={currentUser?.lastName ?? ''}
                 onChangeText={(text) =>
                   setCurrentUser((prev) => ({
                     ...prev,
-                    name: { ...prev.name, lastname: text },
+                    name: { ...prev, lastName: text },
                   }))
                 }
                 placeholder="Enter last name"
@@ -335,7 +344,7 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
   };
 
   const handleSaveProfile = async () => {
-    if (!currentUser.name.firstname.trim() || !currentUser.name.lastname.trim()) {
+    if (!currentUser.firstName.trim() || !currentUser.lastName.trim()) {
       Alert.alert('Error', 'Name cannot be empty');
       return;
     }
@@ -343,7 +352,9 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
     setLoading(true);
     try {
       const data = await makeApiCall('/profile', 'PUT', {
-        name: currentUser.name,
+        firstName: currentUser.firstName,
+        middleName: currentUser.middleName,
+        lastName: currentUser.lastName,
         membershipType: currentUser.membershipType,
         workoutType: currentUser.workoutType,
       });
@@ -665,14 +676,14 @@ const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.name?.firstname
-                ? user.name.firstname.charAt(0).toUpperCase()
+                {user?.firstName
+                ? user.firstName.charAt(0).toUpperCase()
                 : 'U'
                 }
               </Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{user?.name?.firstname ?? ''} {user?.name?.middlename ?? ''} {user?.name?.lastname ?? ''}</Text>
+              <Text style={styles.profileName}>{user?.firstName ?? ''} {user?.middleName ?? ''} {user?.lastName ?? ''}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
               <Text style={styles.joinDate}>{formatJoinDate(user.joinDate)}</Text>
             </View>

@@ -2,11 +2,9 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema({
-  name: { 
-    firstname: { type: String, required: true },
-    middlename: { type: String },
-    lastname: { type: String, required: true }
-  },
+  firstName: { type: String, required: true },
+  middleName: { type: String },
+  lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 6 },
   membershipType: { type: String, enum: ["Monthly", "Quarterly", "Annual"], required: true },
@@ -20,7 +18,7 @@ const userSchema = new mongoose.Schema({
       classType: { type: String }, // optional (e.g., Legs/Upper Body/etc.)
     },
   ],
-  dateofbirth: { type: Date, required: true },
+  dateOfBirth: { type: Date, required: true },
   isActive: { type: Boolean, default: true },
   contactInfo: {
     primaryPhone: { type: String },
@@ -38,7 +36,6 @@ const userSchema = new mongoose.Schema({
     weight: { type: Number }, // in kgs
     height: { type: Number, min: [100, 'Height must be at least 100 cm'], max: [250, 'Height must be less than 250 cm'], default: null }, // in cms
     bloodGroup: { type: String },
-    knownAllergies: { type: String },
     medicalHistiory: {
       accidents: [
         {

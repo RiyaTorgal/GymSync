@@ -55,11 +55,14 @@ interface WorkoutPlan {
 
 interface User {
   // name: string;
-    name: {
-    firstname: string;
-    middlename?: string;
-    lastname: string;
-  };
+  //   name: {
+  //   firstname: string;
+  //   middlename?: string;
+  //   lastname: string;
+  // };
+  firstName: string;
+  middleName?: string;
+  lastName: string;
 }
 
 interface WorkoutPlanScreenProps {
@@ -357,7 +360,7 @@ const WorkoutPlanScreen: React.FC<WorkoutPlanScreenProps> = ({ user }) => {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Workout Plans</Text>
-          <Text style={styles.subtitle}>Hi {user?.name?.firstname}, here&apos;s your weekly schedule</Text>
+          <Text style={styles.subtitle}>Hi {user?.firstName}, here&apos;s your weekly schedule</Text>
         </View>
 
         {loading ? (

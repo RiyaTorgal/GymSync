@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     weight: { type: Number }, // in kgs
     height: { type: Number, min: [100, 'Height must be at least 100 cm'], max: [250, 'Height must be less than 250 cm'], default: null }, // in cms
     bloodGroup: { type: String },
-    medicalHistiory: {
+    medicalHistory: {
       accidents: [
         {
           description: { type: String },
